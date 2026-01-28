@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>T20WC Fantasy Squad</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>T20WC 2026 – Fantasy Squad Selection</h1>
+
+<div class="user-box">
+  <input type="text" id="userName" placeholder="Enter your name">
+  <button type="button" onclick="saveUser()">Save Name</button>
+</div>
+
+<div class="filters">
+  <input type="text" id="search" placeholder="Search player">
+  <select id="categoryFilter">
+    <option value="">All Categories</option>
+    <option value="Batter">Batter</option>
+    <option value="Bowler">Bowler</option>
+    <option value="All-Rounder">All-Rounder</option>
+    <option value="Wicket-Keeper">Wicket-Keeper</option>
+  </select>
+  <select id="teamFilter">
+    <option value="">All Teams</option>
+  </select>
+  <select id="groupFilter">
+    <option value="">All Groups</option>
+    <option value="A">Group A</option>
+    <option value="B">Group B</option>
+    <option value="C">Group C</option>
+    <option value="D">Group D</option>
+  </select>
+  <select id="sortCredits">
+    <option value="">Sort by Credits</option>
+    <option value="asc">Low → High</option>
+    <option value="desc">High → Low</option>
+  </select>
+</div>
+
+<div class="container">
+  <div class="players" id="playerList"></div>
+  <div class="squad">
+    <h3>Your Squad (Max 15)</h3>
+    <ul id="squadList"></ul>
+    <p>Total Credits: <span id="creditsUsed">0</span> / 150</p>
+    <button type="button" id="submitBtn" onclick="submitSquad()">Submit Squad</button>
+    <p id="status"></p>
+  </div>
+</div>
+
+<script src="players.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
