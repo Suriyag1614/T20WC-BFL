@@ -116,7 +116,7 @@ function submitSquad() {
   statusEl.textContent = "Submitting...";
   submitBtn.disabled = true;
 
-  fetch("https://script.google.com/macros/s/AKfycbzGnCJxybP8NsY8_gUgy_4GaqtzwiajBIYeXlCVsdEgeu0LENz0MQVvjIZTOkhtoeMp/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbyn9iCjQvDLJee0YS0WqY5LxauG9E2Ypg4hqzYfmqs5Qvag5Pce-Nzk1DBttNhzSpYz/exec", {
     method: "POST",
     body: JSON.stringify({
       user: user,
