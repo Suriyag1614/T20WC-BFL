@@ -1,3 +1,10 @@
+// === SUBMISSION LOCK CONFIG ===
+const SUBMISSION_DEADLINE = new Date("2026-02-06T18:00:00"); // change later
+let submissionLocked = false;
+
+let hasSubmitted = localStorage.getItem("submitted") === "yes";
+
+let ownership = {};
 let squad = [];
 let usedCredits = 0;
 const MAX_PLAYERS = 15;
@@ -29,11 +36,17 @@ function saveUser() {
 
 /* Load user & populate team filter */
 window.onload = () => {
+  fetch("https://script.google.com/macros/s/AKfycbxOtdzcjWp8xcX8y9mKZ92ko-mpOp0ztFzT8ULB9uh_-yl6E5PEb-GQMuw2O4SYfJrh/exec")
+  .then(r => r.json())
+  .then(d => ownership = d);
+
   const saved = localStorage.getItem("fantasy_user");
   if (saved) userNameInput.value = saved;
   populateTeamFilter();
   applyFilters();
 };
+
+setInterval(checkSubmissionLock, 1000);
 
 /* Populate Teams dropdown */
 function populateTeamFilter() {
@@ -75,7 +88,9 @@ function renderPlayers(data) {
           <div>
             <img src="logos/${p.team}.png" class="player-logo">
           </div>
-          ${p.category} | ${p.team} | Group ${p.group}
+          ${p.category} | ${p.team} | Group ${p.group}<br>
+          <span>📈 Selected By ${ownership[p.name] || 0}% Users</span>
+
         </div>
       </div>
 
@@ -115,11 +130,18 @@ function renderSquad() {
 
   creditsUsedEl.textContent = usedCredits;
   validateSquad();
+  renderCompositionBars();
 }
 
 
 /* Add player with category & credit limits */
 function addPlayer(id) {
+  
+  if (submissionLocked) {
+  showToast("Submissions are locked");
+  return;
+  }
+
   if (squad.length >= MAX_PLAYERS) { showToast("Max 15 players"); return; }
   const p = players.find(x => x.id === id);
   if (!p) return;
@@ -160,6 +182,17 @@ function removePlayer(index) {
 
 /* Submit squad */
 function submitSquad() {
+  
+  if (submissionLocked) {
+  showToast("Submission closed");
+  return;
+  }
+
+  if (hasSubmitted) {
+  showToast("You already submitted");
+  return;
+}
+
   const user = localStorage.getItem("fantasy_user");
   if (!user) { showToast("Save your name first"); return; }
   if (squad.length !== MAX_PLAYERS) { showToast("Select exactly 15 players"); return; }
@@ -186,6 +219,7 @@ function submitSquad() {
   .then(async res => {
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     statusEl.textContent = "Submitted successfully!";
+    localStorage.setItem("submitted", "yes");
     resetCycle();
     setTimeout(() => { statusEl.textContent = ""; hideLoader(); submitBtn.disabled = false; }, 2000);
   })
@@ -295,6 +329,12 @@ function validateSquad() {
 }
 
 function autoPick() {
+  
+  if (submissionLocked) {
+  showToast("Submissions are locked");
+  return;
+  }
+
   // Reset first
   resetCycle();
 
@@ -313,7 +353,11 @@ function autoPick() {
   };
 
   // Sort players by credits (desc) – smarter picks first
-  const sorted = [...players].sort((a, b) => b.credits - a.credits);
+  const sorted = [...players].sort((a, b) =>
+  (b.credits * (ownership[b.name] || 1)) -
+  (a.credits * (ownership[a.name] || 1))
+);
+
 
   const teamCount = {};
 sorted.forEach(p => {
@@ -356,5 +400,48 @@ function showToast(message, success=true) {
   document.body.appendChild(toast);
   setTimeout(() => {
     toast.remove();
-  }, 3000);
+  }, 5000);
+}
+
+function checkSubmissionLock() {
+  const now = new Date();
+  const diff = SUBMISSION_DEADLINE - now;
+  const countdownEl = document.getElementById("countdownText");
+
+  if (diff <= 0) {
+    submissionLocked = true;
+    countdownEl.textContent = "⛔ Submissions Closed";
+    document.body.classList.add("locked");
+    submitBtn.disabled = true;
+    return;
+  }
+
+  const days = Math.floor(diff / 86400000);
+  const hrs = Math.floor(diff / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  const secs = Math.floor((diff % 60000) / 1000);
+  countdownEl.textContent = `⏳ Submission closes in ${days}d ${hrs}h ${mins}m ${secs}s`;
+}
+
+function renderCompositionBars() {
+  const box = document.getElementById("compositionBars");
+  const limits = {
+    "Wicket-Keeper": 2,
+    "Batter": 6,
+    "Bowler": 6,
+    "All-Rounder": 4
+  };
+
+  box.innerHTML = "";
+
+  Object.keys(limits).forEach(cat => {
+    const count = squad.filter(p => p.category === cat).length;
+    const pct = (count / limits[cat]) * 100;
+
+    box.innerHTML += `
+      <div class="comp-bar">
+        <span style="width:${pct}%">${cat}: ${count}/${limits[cat]}</span>
+      </div>
+    `;
+  });
 }

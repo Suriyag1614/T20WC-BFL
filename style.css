@@ -44,6 +44,8 @@ button { cursor:pointer; }
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
+  position: relative;   /* 👈 ADD THIS LINE */
 }
 
 .player-card.selected {
@@ -105,7 +107,7 @@ button { cursor:pointer; }
 
 .toast {
   position: fixed;
-  bottom: 20px; right: 20px;
+  top: 20px; right: 20px;
   background: #2e7d32;
   color: #fff;
   padding: 12px 20px;
@@ -117,7 +119,37 @@ button { cursor:pointer; }
 .toast.show { opacity: 1; }
 
 .player-logo {
-  width: 24px; height: 24px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  margin-left: 6px;
+
+  position: absolute;   /* 👈 ADD */
+  top: 8px;             /* 👈 ADD */
+  right: 8px;           /* 👈 ADD */
+}
+
+
+.lock-panel {
+  text-align: center;
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.locked {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.comp-bar {
+  margin: 4px 0;
+  background: #eee;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.comp-bar span {
+  display: block;
+  padding: 4px;
+  background: #2e7d32;
+  color: white;
+  font-size: 12px;
 }
