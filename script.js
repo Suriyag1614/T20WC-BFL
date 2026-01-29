@@ -3,6 +3,10 @@ let usedCredits = 0;
 const MAX_PLAYERS = 15;
 const MAX_CREDITS = 150;
 
+let captainId = null;
+let viceCaptainId = null;
+const validationPanel = document.getElementById("validationPanel");
+
 const playerList = document.getElementById("playerList");
 const squadList = document.getElementById("squadList");
 const creditsUsedEl = document.getElementById("creditsUsed");
@@ -72,13 +76,27 @@ function renderPlayers(data) {
 /* Render Squad */
 function renderSquad() {
   squadList.innerHTML = "";
+
   squad.forEach((p, i) => {
     const li = document.createElement("li");
-    li.innerHTML = `${p.name} (${p.credits}) <button onclick="removePlayer(${i})">❌</button>`;
+
+    const isC = p.id === captainId ? "active" : "";
+    const isVC = p.id === viceCaptainId ? "active" : "";
+
+    li.innerHTML = `
+      ${p.name} (${p.credits})
+      <span class="badge ${isC}" onclick="setCaptain('${p.id}')">C</span>
+      <span class="badge ${isVC}" onclick="setViceCaptain('${p.id}')">VC</span>
+      <button onclick="removePlayer(${i})">❌</button>
+    `;
+
     squadList.appendChild(li);
   });
+
   creditsUsedEl.textContent = usedCredits;
+  validateSquad();
 }
+
 
 /* Add player with category & credit limits */
 function addPlayer(id) {
@@ -101,11 +119,17 @@ function addPlayer(id) {
 /* Remove player */
 function removePlayer(index) {
   const p = squad[index];
+
+  if (p.id === captainId) captainId = null;
+  if (p.id === viceCaptainId) viceCaptainId = null;
+
   usedCredits -= p.credits;
   squad.splice(index, 1);
+
   renderSquad();
   applyFilters();
 }
+
 
 /* Submit squad */
 function submitSquad() {
@@ -116,14 +140,21 @@ function submitSquad() {
   statusEl.textContent = "Submitting...";
   submitBtn.disabled = true;
 
-  fetch("https://script.google.com/macros/s/AKfycbyn9iCjQvDLJee0YS0WqY5LxauG9E2Ypg4hqzYfmqs5Qvag5Pce-Nzk1DBttNhzSpYz/exec", {
-    method: "POST",
-    body: JSON.stringify({
-      user: user,
-      squad: squad,
-      totalCredits: usedCredits
-    })
-  })
+  if (!captainId || !viceCaptainId) {
+  alert("Select Captain and Vice-Captain");
+  return;
+}
+
+  fetch("https://script.google.com/macros/s/AKfycbzGW5EJVwHb6zrDhEWME-9x2P56uR-g_0FWDuxIaJS_W_Q1qBIfLSa7e-oBjTIaVrvh/exec", {
+  method: "POST",
+ body: JSON.stringify({
+  user: user,
+  captainId: captainId,
+  viceCaptainId: viceCaptainId,
+  squad: squad,          // plain objects only
+  totalCredits: usedCredits
+})
+})
   .then(async res => {
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     statusEl.textContent = "Submitted successfully!";
@@ -141,6 +172,85 @@ function submitSquad() {
 function resetCycle() {
   squad = [];
   usedCredits = 0;
+  captainId = null;
+  viceCaptainId = null;
   renderSquad();
   applyFilters();
+}
+
+
+function setCaptain(id) {
+  if (viceCaptainId === id) {
+    alert("Vice-Captain cannot be Captain");
+    return;
+  }
+  captainId = id;
+  renderSquad();
+}
+
+function setViceCaptain(id) {
+  if (captainId === id) {
+    alert("Captain cannot be Vice-Captain");
+    return;
+  }
+  viceCaptainId = id;
+  renderSquad();
+}
+
+function validateSquad() {
+  let valid = true;
+  const lines = [];
+
+  // Player count
+  const pc = squad.length;
+  lines.push(
+    pc === MAX_PLAYERS
+      ? `<p class="ok">✔ Players: ${pc}/15</p>`
+      : `<p class="err">✖ Players: ${pc}/15</p>`
+  );
+  if (pc !== MAX_PLAYERS) valid = false;
+
+  // Credits
+  lines.push(
+    usedCredits <= MAX_CREDITS
+      ? `<p class="ok">✔ Credits: ${usedCredits}/150</p>`
+      : `<p class="err">✖ Credits exceeded</p>`
+  );
+  if (usedCredits > MAX_CREDITS) valid = false;
+
+  // Category validation
+  const limits = {
+    "Wicket-Keeper": 2,
+    "Batter": 6,
+    "Bowler": 6,
+    "All-Rounder": 4
+  };
+
+  Object.keys(limits).forEach(cat => {
+    const count = squad.filter(p => p.category === cat).length;
+    lines.push(
+      count <= limits[cat]
+        ? `<p class="ok">✔ ${cat}: ${count}/${limits[cat]}</p>`
+        : `<p class="err">✖ ${cat}: ${count}/${limits[cat]}</p>`
+    );
+    if (count > limits[cat]) valid = false;
+  });
+
+  // Captain / VC
+  if (captainId) {
+    lines.push(`<p class="ok">✔ Captain selected</p>`);
+  } else {
+    lines.push(`<p class="err">✖ Captain not selected</p>`);
+    valid = false;
+  }
+
+  if (viceCaptainId) {
+    lines.push(`<p class="ok">✔ Vice-Captain selected</p>`);
+  } else {
+    lines.push(`<p class="err">✖ Vice-Captain not selected</p>`);
+    valid = false;
+  }
+
+  validationPanel.innerHTML = lines.join("");
+  submitBtn.disabled = !valid;
 }

@@ -7,3 +7,24 @@ h1 { text-align: center; }
 .player { display:flex; justify-content:space-between; margin-bottom:5px; }
 .squad { width:35%; border:1px solid #333; padding:10px; position:sticky; top:10px; height:fit-content; }
 button { cursor:pointer; }
+.validation {
+  font-size: 14px;
+  margin: 10px 0;
+}
+.validation p {
+  margin: 3px 0;
+}
+.ok { color: green; }
+.err { color: red; }
+.badge {
+  cursor: pointer;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #999;
+  font-size: 12px;
+}
+.badge.active {
+  background: #333;
+  color: #fff;
+}

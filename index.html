@@ -42,12 +42,21 @@
 <div class="container">
   <div class="players" id="playerList"></div>
   <div class="squad">
-    <h3>Your Squad (Max 15)</h3>
-    <ul id="squadList"></ul>
-    <p>Total Credits: <span id="creditsUsed">0</span> / 150</p>
-    <button type="button" id="submitBtn" onclick="submitSquad()">Submit Squad</button>
-    <p id="status"></p>
-  </div>
+  <h3>Your Squad (Max 15)</h3>
+
+  <ul id="squadList"></ul>
+
+  <div class="validation" id="validationPanel"></div>
+
+  <p>Total Credits: <span id="creditsUsed">0</span> / 150</p>
+
+  <button type="button" id="submitBtn" onclick="submitSquad()" disabled>
+    Submit Squad
+  </button>
+
+  <p id="status"></p>
+</div>
+
 </div>
 
 <script src="players.js"></script>
