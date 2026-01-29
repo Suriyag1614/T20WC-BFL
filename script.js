@@ -80,7 +80,7 @@ function renderPlayers(data) {
       </div>
 
       <div class="player-footer">
-        <span>💳 ${p.credits}</span>
+        <span>🪙 ${p.credits}</span>
         <button
           class="${selected ? "disabled" : "add"}"
           ${selected ? "disabled" : `onclick="addPlayer('${p.id}')"`}>
