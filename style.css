@@ -28,3 +28,59 @@ button { cursor:pointer; }
   background: #333;
   color: #fff;
 }
+
+.players {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.player-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.player-card.selected {
+  background: #f0f0f0;
+  opacity: 0.7;
+}
+
+.player-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.player-meta {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.player-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.player-footer button {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.player-footer button.add {
+  background: #2e7d32;
+  color: #fff;
+}
+
+.player-footer button.disabled {
+  background: #999;
+  cursor: not-allowed;
+}

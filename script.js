@@ -61,15 +61,32 @@ function applyFilters() {
 /* Render Player List */
 function renderPlayers(data) {
   playerList.innerHTML = "";
+
   data.forEach(p => {
     const selected = squad.some(s => s.id === p.id);
-    const div = document.createElement("div");
-    div.className = "player";
-    div.innerHTML = `
-      <span>${p.name} (${p.team}) - ${p.credits}</span>
-      <button ${selected ? "" : "onclick='addPlayer(\""+p.id+"\")'"}>${selected ? "Selected" : "Add"}</button>
+
+    const card = document.createElement("div");
+    card.className = `player-card ${selected ? "selected" : ""}`;
+
+    card.innerHTML = `
+      <div>
+        <div class="player-name">${p.name}</div>
+        <div class="player-meta">
+          ${p.category} | ${p.team} | Group ${p.group}
+        </div>
+      </div>
+
+      <div class="player-footer">
+        <span>💳 ${p.credits}</span>
+        <button
+          class="${selected ? "disabled" : "add"}"
+          ${selected ? "disabled" : `onclick="addPlayer('${p.id}')"`}>
+          ${selected ? "Selected" : "Add"}
+        </button>
+      </div>
     `;
-    playerList.appendChild(div);
+
+    playerList.appendChild(card);
   });
 }
 
@@ -253,4 +270,46 @@ function validateSquad() {
 
   validationPanel.innerHTML = lines.join("");
   submitBtn.disabled = !valid;
+}
+
+function autoPick() {
+  // Reset first
+  resetCycle();
+
+  const limits = {
+    "Wicket-Keeper": 2,
+    "Batter": 6,
+    "Bowler": 6,
+    "All-Rounder": 4
+  };
+
+  const categoryCount = {
+    "Wicket-Keeper": 0,
+    "Batter": 0,
+    "Bowler": 0,
+    "All-Rounder": 0
+  };
+
+  // Sort players by credits (desc) – smarter picks first
+  const sorted = [...players].sort((a, b) => b.credits - a.credits);
+
+  for (let p of sorted) {
+    if (squad.length >= MAX_PLAYERS) break;
+
+    if (categoryCount[p.category] >= limits[p.category]) continue;
+    if (usedCredits + p.credits > MAX_CREDITS) continue;
+
+    squad.push(p);
+    usedCredits += p.credits;
+    categoryCount[p.category]++;
+  }
+
+  // Auto-assign Captain & VC (highest credit players)
+  if (squad.length >= 2) {
+    captainId = squad[0].id;
+    viceCaptainId = squad[1].id;
+  }
+
+  renderSquad();
+  applyFilters();
 }
