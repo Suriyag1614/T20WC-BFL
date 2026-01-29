@@ -84,3 +84,40 @@ button { cursor:pointer; }
   background: #999;
   cursor: not-allowed;
 }
+
+#loader {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #2e7d32;
+  border-radius: 50%;
+  width: 50px; height: 50px;
+  animation: spin 1s linear infinite;
+  display: none;
+  z-index: 9999;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  background: #2e7d32;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.toast.show { opacity: 1; }
+
+.player-logo {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  margin-left: 6px;
+}

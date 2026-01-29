@@ -22,9 +22,9 @@ const submitBtn = document.getElementById("submitBtn");
 /* Save username */
 function saveUser() {
   const name = userNameInput.value.trim();
-  if (!name) { alert("Enter your name"); return; }
+  if (!name) { showToast("Enter your name"); return; }
   localStorage.setItem("fantasy_user", name);
-  alert("Name saved!");
+  showToast("Name saved!");
 }
 
 /* Load user & populate team filter */
@@ -72,6 +72,9 @@ function renderPlayers(data) {
       <div>
         <div class="player-name">${p.name}</div>
         <div class="player-meta">
+          <div>
+            <img src="logos/${p.team}.png" class="player-logo">
+          </div>
           ${p.category} | ${p.team} | Group ${p.group}
         </div>
       </div>
@@ -117,15 +120,22 @@ function renderSquad() {
 
 /* Add player with category & credit limits */
 function addPlayer(id) {
-  if (squad.length >= MAX_PLAYERS) { alert("Max 15 players"); return; }
+  if (squad.length >= MAX_PLAYERS) { showToast("Max 15 players"); return; }
   const p = players.find(x => x.id === id);
   if (!p) return;
-  if (usedCredits + p.credits > MAX_CREDITS) { alert("Credit limit exceeded"); return; }
+  if (usedCredits + p.credits > MAX_CREDITS) { showToast("Credit limit exceeded"); return; }
 
   // Category limits
   const categoryCount = squad.filter(x => x.category === p.category).length;
   const limits = { "Wicket-Keeper": 2, "Batter": 6, "Bowler": 6, "All-Rounder": 4 };
-  if (categoryCount >= limits[p.category]) { alert(`Max ${limits[p.category]} ${p.category}s allowed`); return; }
+  if (categoryCount >= limits[p.category]) { showToast(`Max ${limits[p.category]} ${p.category}s allowed`); return; }
+
+  // Team-wise limit check
+const teamCount = squad.filter(x => x.team === p.team).length;
+if (teamCount >= 4) { 
+  showToast(`Max 4 players allowed from ${p.team}`);
+  return;
+}
 
   squad.push(p);
   usedCredits += p.credits;
@@ -151,14 +161,15 @@ function removePlayer(index) {
 /* Submit squad */
 function submitSquad() {
   const user = localStorage.getItem("fantasy_user");
-  if (!user) { alert("Save your name first"); return; }
-  if (squad.length !== MAX_PLAYERS) { alert("Select exactly 15 players"); return; }
+  if (!user) { showToast("Save your name first"); return; }
+  if (squad.length !== MAX_PLAYERS) { showToast("Select exactly 15 players"); return; }
 
   statusEl.textContent = "Submitting...";
+  showLoader();
   submitBtn.disabled = true;
 
   if (!captainId || !viceCaptainId) {
-  alert("Select Captain and Vice-Captain");
+  showToast("Select Captain and Vice-Captain");
   return;
 }
 
@@ -176,11 +187,12 @@ function submitSquad() {
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     statusEl.textContent = "Submitted successfully!";
     resetCycle();
-    setTimeout(() => { statusEl.textContent = ""; submitBtn.disabled = false; }, 2000);
+    setTimeout(() => { statusEl.textContent = ""; hideLoader(); submitBtn.disabled = false; }, 2000);
   })
   .catch(err => {
     console.error(err);
     statusEl.textContent = "Submission failed! Check console.";
+    hideLoader();
     submitBtn.disabled = false;
   });
 }
@@ -198,7 +210,7 @@ function resetCycle() {
 
 function setCaptain(id) {
   if (viceCaptainId === id) {
-    alert("Vice-Captain cannot be Captain");
+    showToast("Vice-Captain cannot be Captain");
     return;
   }
   captainId = id;
@@ -207,7 +219,7 @@ function setCaptain(id) {
 
 function setViceCaptain(id) {
   if (captainId === id) {
-    alert("Captain cannot be Vice-Captain");
+    showToast("Captain cannot be Vice-Captain");
     return;
   }
   viceCaptainId = id;
@@ -252,6 +264,16 @@ function validateSquad() {
     );
     if (count > limits[cat]) valid = false;
   });
+  // Team-wise validation
+[...new Set(players.map(p => p.team))].forEach(team => {
+  const count = squad.filter(p => p.team === team).length;
+  lines.push(
+    count <= 4
+      ? `<p class="ok">✔ ${team} players: ${count}/4</p>`
+      : `<p class="err">✖ ${team} players: ${count}/4</p>`
+  );
+  if (count > 4) valid = false;
+});
 
   // Captain / VC
   if (captainId) {
@@ -293,16 +315,20 @@ function autoPick() {
   // Sort players by credits (desc) – smarter picks first
   const sorted = [...players].sort((a, b) => b.credits - a.credits);
 
-  for (let p of sorted) {
-    if (squad.length >= MAX_PLAYERS) break;
+  const teamCount = {};
+sorted.forEach(p => {
+  if (!teamCount[p.team]) teamCount[p.team] = 0;
+  if (squad.length >= MAX_PLAYERS) return;
+  if (categoryCount[p.category] >= limits[p.category]) return;
+  if (teamCount[p.team] >= 4) return;  // team cap
+  if (usedCredits + p.credits > MAX_CREDITS) return;
 
-    if (categoryCount[p.category] >= limits[p.category]) continue;
-    if (usedCredits + p.credits > MAX_CREDITS) continue;
+  squad.push(p);
+  usedCredits += p.credits;
+  categoryCount[p.category]++;
+  teamCount[p.team]++;
+});
 
-    squad.push(p);
-    usedCredits += p.credits;
-    categoryCount[p.category]++;
-  }
 
   // Auto-assign Captain & VC (highest credit players)
   if (squad.length >= 2) {
@@ -312,4 +338,23 @@ function autoPick() {
 
   renderSquad();
   applyFilters();
+}
+
+function clearSquad() {
+  if(confirm("Are you sure you want to clear your squad?")) {
+    resetCycle();
+  }
+}
+
+function showLoader() { document.getElementById('loader').style.display = 'block'; }
+function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+
+function showToast(message, success=true) {
+  const toast = document.createElement('div');
+  toast.className = `toast ${success ? 'show' : ''}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
 }
