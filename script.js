@@ -2,8 +2,6 @@
 const SUBMISSION_DEADLINE = new Date("2026-02-06T18:00:00"); // change later
 let submissionLocked = false;
 
-let hasSubmitted = localStorage.getItem("submitted") === "yes";
-
 let ownership = {};
 let squad = [];
 let usedCredits = 0;
@@ -36,7 +34,7 @@ function saveUser() {
 
 /* Load user & populate team filter */
 window.onload = () => {
-  fetch("https://script.google.com/macros/s/AKfycbx5mLseRWMDqxuVto_AeTVmFTuaNXKEePQx65LwU3ejzugVTaVVAL42QEUaZPEmzwCc/exec")
+  fetch("https://script.google.com/macros/s/AKfycbzqPGxf339DBEAcCVDrke77AnRdT9j5-gtZg3Dko3r0_Cjr6Lm7SnXommFrWxfetwFX/exec")
   .then(r => r.json())
   .then(d => ownership = d);
 
@@ -89,7 +87,7 @@ function renderPlayers(data) {
             <img src="logos/${p.team}.png" class="player-logo">
           </div>
           ${p.category} | ${p.team} | Group ${p.group}<br>
-          <span>📈 Selected By ${ownership[p.name] || 0}% Users</span>
+          <span>📈 Selected By ${ownership[p.id] || 0}% Users</span>
 
         </div>
       </div>
@@ -130,17 +128,11 @@ function renderSquad() {
 
   creditsUsedEl.textContent = usedCredits;
   validateSquad();
-  renderCompositionBars();
 }
 
 
 /* Add player with category & credit limits */
 function addPlayer(id) {
-  
-  if (submissionLocked) {
-  showToast("Submissions are locked");
-  return;
-  }
 
   if (squad.length >= MAX_PLAYERS) { showToast("Max 15 players"); return; }
   const p = players.find(x => x.id === id);
@@ -182,54 +174,64 @@ function removePlayer(index) {
 
 /* Submit squad */
 function submitSquad() {
-  
+
   if (submissionLocked) {
-  showToast("Submission closed");
-  return;
+    showToast("Submission closed");
+    return;
   }
 
-  if (hasSubmitted) {
-  showToast("You already submitted");
-  return;
-}
+   const user = localStorage.getItem("fantasy_user");
+  if (!user) {
+    showToast("Save your name first");
+    return;
+  }
 
-  const user = localStorage.getItem("fantasy_user");
-  if (!user) { showToast("Save your name first"); return; }
-  if (squad.length !== MAX_PLAYERS) { showToast("Select exactly 15 players"); return; }
-
-  statusEl.textContent = "Submitting...";
-  showLoader();
-  submitBtn.disabled = true;
+  if (squad.length !== MAX_PLAYERS) {
+    showToast("Select exactly 15 players");
+    return;
+  }
 
   if (!captainId || !viceCaptainId) {
-  showToast("Select Captain and Vice-Captain");
-  return;
+    showToast("Select Captain and Vice-Captain");
+    return;
+  }
+
+statusEl.textContent = "Submitting...";
+showOverlay();
+submitBtn.disabled = true;
+
+fetch("https://script.google.com/macros/s/AKfycbzqPGxf339DBEAcCVDrke77AnRdT9j5-gtZg3Dko3r0_Cjr6Lm7SnXommFrWxfetwFX/exec", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    user,
+    captainId,
+    viceCaptainId,
+    squad,
+    totalCredits: usedCredits
+  })
+})
+.then(r => r.json())   // 🔥 IMPORTANT
+.then(resp => {
+  if (resp.status !== "success") {
+    throw new Error(resp.message || "Server error");
+  }
+  statusEl.textContent = "Submitted successfully!";
+  showToast("✅ Squad submitted!");
+  resetCycle();
+})
+.catch(err => {
+  console.error(err);
+  statusEl.textContent = "Submission failed!";
+  showToast("❌ Submission failed");
+})
+.finally(() => {
+  hideOverlay();
+  submitBtn.disabled = false;
+});
+
 }
 
-  fetch("https://script.google.com/macros/s/AKfycbx5mLseRWMDqxuVto_AeTVmFTuaNXKEePQx65LwU3ejzugVTaVVAL42QEUaZPEmzwCc/exec", {
-  method: "POST",
- body: JSON.stringify({
-  user: user,
-  captainId: captainId,
-  viceCaptainId: viceCaptainId,
-  squad: squad,          // plain objects only
-  totalCredits: usedCredits
-})
-})
-  .then(async res => {
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    statusEl.textContent = "Submitted successfully!";
-    localStorage.setItem("submitted", "yes");
-    resetCycle();
-    setTimeout(() => { statusEl.textContent = ""; hideLoader(); submitBtn.disabled = false; }, 2000);
-  })
-  .catch(err => {
-    console.error(err);
-    statusEl.textContent = "Submission failed! Check console.";
-    hideLoader();
-    submitBtn.disabled = false;
-  });
-}
 
 /* Reset squad */
 function resetCycle() {
@@ -296,8 +298,17 @@ function validateSquad() {
         ? `<p class="ok">✔ ${cat}: ${count}/${limits[cat]}</p>`
         : `<p class="err">✖ ${cat}: ${count}/${limits[cat]}</p>`
     );
+    
     if (count > limits[cat]) valid = false;
   });
+  const wkCount = squad.filter(p => p.category === "Wicket-Keeper").length;
+    if (wkCount < 1) {
+      lines.push(`<p class="err">✖ At least 1 Wicket-Keeper required</p>`);
+      valid = false;
+    } else {
+      lines.push(`<p class="ok">✔ Wicket-Keeper selected</p>`);
+    }
+  
   // Team-wise validation
 [...new Set(players.map(p => p.team))].forEach(team => {
   const count = squad.filter(p => p.team === team).length;
@@ -328,8 +339,23 @@ function validateSquad() {
   submitBtn.disabled = !valid;
 }
 
+function addPlayerAuto(p, categoryCount, teamCount, limits) {
+  if (squad.length >= MAX_PLAYERS) return false;
+  if (categoryCount[p.category] >= limits[p.category]) return false;
+  if ((teamCount[p.team] || 0) >= 4) return false;
+  if (usedCredits + p.credits > MAX_CREDITS) return false;
+  if (squad.some(x => x.id === p.id)) return false;
+
+  squad.push(p);
+  usedCredits += p.credits;
+  categoryCount[p.category]++;
+  teamCount[p.team] = (teamCount[p.team] || 0) + 1;
+  return true;
+}
+
 function autoPick() {
-  
+  console.log("AutoPick triggered", players.length, ownership);
+
   if (submissionLocked) {
   showToast("Submissions are locked");
   return;
@@ -354,30 +380,35 @@ function autoPick() {
 
   // Sort players by credits (desc) – smarter picks first
   const sorted = [...players].sort((a, b) =>
-  (b.credits * (ownership[b.name] || 1)) -
-  (a.credits * (ownership[a.name] || 1))
+  (b.credits * (ownership[b.id] || 1)) -
+  (a.credits * (ownership[a.id] || 1))
 );
 
+players
+  .filter(p => p.category === "Wicket-Keeper")
+  .slice(0, 1)
+  .forEach(p => {
+    squad.push(p);
+    usedCredits += p.credits;
+    categoryCount[p.category]++;
+  });
 
-  const teamCount = {};
-sorted.forEach(p => {
-  if (!teamCount[p.team]) teamCount[p.team] = 0;
-  if (squad.length >= MAX_PLAYERS) return;
-  if (categoryCount[p.category] >= limits[p.category]) return;
-  if (teamCount[p.team] >= 4) return;  // team cap
-  if (usedCredits + p.credits > MAX_CREDITS) return;
-
-  squad.push(p);
-  usedCredits += p.credits;
-  categoryCount[p.category]++;
-  teamCount[p.team]++;
+const teamCount = {};
+squad.forEach(p => {
+  teamCount[p.team] = (teamCount[p.team] || 0) + 1;
 });
 
+sorted.forEach(p => {
+  if (squad.length >= MAX_PLAYERS) return;
+  addPlayerAuto(p, categoryCount, teamCount, limits);
+});
 
   // Auto-assign Captain & VC (highest credit players)
   if (squad.length >= 2) {
+    squad.sort((a, b) => b.credits - a.credits);
     captainId = squad[0].id;
     viceCaptainId = squad[1].id;
+
   }
 
   renderSquad();
@@ -390,18 +421,20 @@ function clearSquad() {
   }
 }
 
-function showLoader() { document.getElementById('loader').style.display = 'block'; }
-function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+function showToast(message) {
+  const existing = document.querySelector(".toast");
+  if (existing) existing.remove();
 
-function showToast(message, success=true) {
-  const toast = document.createElement('div');
-  toast.className = `toast ${success ? 'show' : ''}`;
+  const toast = document.createElement("div");
+  toast.className = "toast show";
   toast.textContent = message;
   document.body.appendChild(toast);
+
   setTimeout(() => {
     toast.remove();
   }, 5000);
 }
+
 
 function checkSubmissionLock() {
   const now = new Date();
@@ -413,35 +446,54 @@ function checkSubmissionLock() {
     countdownEl.textContent = "⛔ Submissions Closed";
     document.body.classList.add("locked");
     submitBtn.disabled = true;
+    disablePage(true);
     return;
   }
 
   const days = Math.floor(diff / 86400000);
-  const hrs = Math.floor(diff / 3600000);
+  const hrs = Math.floor((diff % 86400000) / 3600000);
   const mins = Math.floor((diff % 3600000) / 60000);
   const secs = Math.floor((diff % 60000) / 1000);
   countdownEl.textContent = `⏳ Submission closes in ${days}d ${hrs}h ${mins}m ${secs}s`;
 }
 
-function renderCompositionBars() {
-  const box = document.getElementById("compositionBars");
-  const limits = {
-    "Wicket-Keeper": 2,
-    "Batter": 6,
-    "Bowler": 6,
-    "All-Rounder": 4
-  };
+function disablePage(disabled) {
+  const app = document.getElementById("appRoot");
+  if (!app) return;
+  app.style.pointerEvents = disabled ? "none" : "auto";
+  app.style.opacity = disabled ? "0.6" : "1";
+}
 
-  box.innerHTML = "";
+function showOverlay() {
+  document.getElementById("overlay").classList.add("show");
+}
 
-  Object.keys(limits).forEach(cat => {
-    const count = squad.filter(p => p.category === cat).length;
-    const pct = (count / limits[cat]) * 100;
+function hideOverlay() {
+  document.getElementById("overlay").classList.remove("show");
+}
 
-    box.innerHTML += `
-      <div class="comp-bar">
-        <span style="width:${pct}%">${cat}: ${count}/${limits[cat]}</span>
-      </div>
-    `;
+function openPreview() {
+  const list = document.getElementById("previewList");
+  list.innerHTML = "";
+
+  squad.forEach(p => {
+    const li = document.createElement("li");
+    li.textContent =
+      `${p.name} (${p.category})` +
+      (p.id === captainId ? " [C]" : "") +
+      (p.id === viceCaptainId ? " [VC]" : "");
+    list.appendChild(li);
   });
+
+  document.getElementById("previewCredits").textContent = usedCredits;
+  document.getElementById("previewModal").classList.add("show");
+}
+
+function closePreview() {
+  document.getElementById("previewModal").classList.remove("show");
+}
+
+function confirmSubmit() {
+  closePreview();
+  submitSquad();
 }

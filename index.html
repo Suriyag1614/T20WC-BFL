@@ -6,16 +6,18 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>T20WC 2026 – Fantasy Squad Selection</h1>
+<header class="app-header">
+  <img src="logos/BFL.png" class="logo left">
+  <h1>T20WC 2026 – Fantasy Squad Selection</h1>
+  <img src="logos/T20WC.png" class="logo right">
+</header>
 
-<div id="lockPanel" class="lock-panel">
+<div id="lockPanel" class="lock-panel floating-timer">
   <p id="countdownText"></p>
 </div>
 
-<div class="tournament-logos" style="display:flex; justify-content: space-between; align-items:center; margin:10px 20px;">
-  <img src="logos/BFL.png" alt="BFL Logo" style="height:50px;">
-  <img src="logos/T20WC.png" alt="T20WC Logo" style="height:50px;">
-</div>
+<div id="appRoot">
+  <!-- everything except header + timer -->
 
 <div class="user-box">
   <input type="text" id="userName" placeholder="Enter your name">
@@ -48,7 +50,7 @@
   </select>
 </div>
 
-<button type="button" onclick="autoPick()">⚡ Auto Pick</button>
+<button onclick="autoPick()" type="button">⚡ Auto Pick</button>
 
 <div class="container">
   <div class="players" id="playerList"></div>
@@ -59,24 +61,37 @@
 
   <div class="validation" id="validationPanel"></div>
 
-  <div id="compositionBars"></div>
-
   <p>Total Credits: <span id="creditsUsed">0</span> / 150</p>
 
-  <button type="button" id="submitBtn" onclick="submitSquad()" disabled>
-    Submit Squad
-  </button>
+  <button type="button" id="submitBtn" onclick="openPreview()" disabled>Submit Squad</button>
+
 
   <button type="button" onclick="clearSquad()">🗑 Clear Squad</button>
 
   <p id="status"></p>
 </div>
-
 </div>
-
-<div id="loader"></div>
+</div>
 
 <script src="players.js"></script>
 <script src="script.js"></script>
+
+<div id="previewModal" class="modal">
+  <div class="modal-box">
+    <h3>Confirm Your Squad</h3>
+    <ul id="previewList"></ul>
+    <p><strong>Total Credits:</strong> <span id="previewCredits"></span></p>
+    <div class="modal-actions">
+      <button onclick="closePreview()">Cancel</button>
+      <button class="primary" onclick="confirmSubmit()">Confirm & Submit</button>
+    </div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="spinner"></div>
+  <p>Submitting your squad…</p>
+</div>
+
 </body>
 </html>
