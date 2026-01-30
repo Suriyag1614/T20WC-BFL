@@ -18,5 +18,5 @@ const players = [
   { id: "P017", name: "Pat Cummins", category: "Bowler", team: "AUS", group: "D", credits: 10 },
   { id: "P018", name: "Glenn Maxwell", category: "All-Rounder", team: "AUS", group: "D", credits: 9.5 },
   { id: "P019", name: "Matthew Wade", category: "Wicket-Keeper", team: "AUS", group: "D", credits: 8.5 },
-  { id: "P020", name: "Steve Smith", category: "Batter", team: "AUS", group: "D", credits: 9 }
+  { id: "P020", name: "Josh Hazlewood", category: "Bowler", team: "AUS", group: "D", credits: 9 }
 ];

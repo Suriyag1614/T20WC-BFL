@@ -36,7 +36,7 @@ function saveUser() {
 
 /* Load user & populate team filter */
 window.onload = () => {
-  fetch("https://script.google.com/macros/s/AKfycbxOtdzcjWp8xcX8y9mKZ92ko-mpOp0ztFzT8ULB9uh_-yl6E5PEb-GQMuw2O4SYfJrh/exec")
+  fetch("https://script.google.com/macros/s/AKfycbx5mLseRWMDqxuVto_AeTVmFTuaNXKEePQx65LwU3ejzugVTaVVAL42QEUaZPEmzwCc/exec")
   .then(r => r.json())
   .then(d => ownership = d);
 
@@ -206,7 +206,7 @@ function submitSquad() {
   return;
 }
 
-  fetch("https://script.google.com/macros/s/AKfycbzGW5EJVwHb6zrDhEWME-9x2P56uR-g_0FWDuxIaJS_W_Q1qBIfLSa7e-oBjTIaVrvh/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbx5mLseRWMDqxuVto_AeTVmFTuaNXKEePQx65LwU3ejzugVTaVVAL42QEUaZPEmzwCc/exec", {
   method: "POST",
  body: JSON.stringify({
   user: user,
