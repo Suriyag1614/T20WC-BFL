@@ -34,7 +34,7 @@ function saveUser() {
 
 /* Load user & populate team filter */
 window.onload = () => {
-  fetch("https://script.google.com/macros/s/AKfycbwXUsJ2ki0j3cGvbldlag1sOSpQwSSL2eDCfoIocx4g5bmzEkBIX_UkjygN-QiGzSTB/exec")
+  fetch("https://script.google.com/macros/s/AKfycbyYYG1satS2GD4ffjo_dOHEEOLtyhJwDcFxbQgXJ5VDLyUmlkjCsvRZU8Qz_0NacBWA/exec")
   .then(r => r.json())
   .then(d => ownership = d);
 
@@ -200,7 +200,7 @@ statusEl.textContent = "Submitting...";
 showOverlay();
 submitBtn.disabled = true;
 
-fetch("https://script.google.com/macros/s/AKfycbwXUsJ2ki0j3cGvbldlag1sOSpQwSSL2eDCfoIocx4g5bmzEkBIX_UkjygN-QiGzSTB/exec", {
+fetch("https://script.google.com/macros/s/AKfycbyYYG1satS2GD4ffjo_dOHEEOLtyhJwDcFxbQgXJ5VDLyUmlkjCsvRZU8Qz_0NacBWA/exec", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -211,7 +211,9 @@ fetch("https://script.google.com/macros/s/AKfycbwXUsJ2ki0j3cGvbldlag1sOSpQwSSL2e
     totalCredits: usedCredits
   })
 })
-.then(r => r.json())   // 🔥 IMPORTANT
+.then(r => r.text())
+.then(t => JSON.parse(t))
+
 .then(resp => {
   if (resp.status !== "success") {
     throw new Error(resp.message || "Server error");
