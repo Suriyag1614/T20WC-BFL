@@ -34,7 +34,7 @@ function saveUser() {
 
 /* Load user & populate team filter */
 window.onload = () => {
-  fetch("https://script.google.com/macros/s/AKfycbzqPGxf339DBEAcCVDrke77AnRdT9j5-gtZg3Dko3r0_Cjr6Lm7SnXommFrWxfetwFX/exec")
+  fetch("https://script.google.com/macros/s/AKfycbwXUsJ2ki0j3cGvbldlag1sOSpQwSSL2eDCfoIocx4g5bmzEkBIX_UkjygN-QiGzSTB/exec")
   .then(r => r.json())
   .then(d => ownership = d);
 
@@ -200,7 +200,7 @@ statusEl.textContent = "Submitting...";
 showOverlay();
 submitBtn.disabled = true;
 
-fetch("https://script.google.com/macros/s/AKfycbzqPGxf339DBEAcCVDrke77AnRdT9j5-gtZg3Dko3r0_Cjr6Lm7SnXommFrWxfetwFX/exec", {
+fetch("https://script.google.com/macros/s/AKfycbwXUsJ2ki0j3cGvbldlag1sOSpQwSSL2eDCfoIocx4g5bmzEkBIX_UkjygN-QiGzSTB/exec", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
