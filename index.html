@@ -19,26 +19,59 @@
 <div id="appRoot">
   <!-- everything except header + timer -->
 
-<div class="user-box">
-  <input type="text" id="userName" placeholder="Enter your name">
-  <button type="button" onclick="saveUser()">Save Name</button>
-</div>
+  <div class="instructions" id="instructionsBox">
+  <div class="instructions-header" onclick="toggleInstructions()">
+    📘 Instructions
+    <span id="instructionsToggle">▼</span>
+  </div>
 
-<div class="filters">
-  <input type="text" id="search" placeholder="Search player">
-  <select id="categoryFilter">
-    <option value="">All Categories</option>
-    <option value="Batter">Batter</option>
-    <option value="Bowler">Bowler</option>
-    <option value="All-Rounder">All-Rounder</option>
-    <option value="Wicket-Keeper">Wicket-Keeper</option>
-  </select>
-  <select id="teamFilter">
-    <option value="">All Teams</option>
-  </select>
-  <select id="groupFilter">
-    <option value="">All Groups</option>
-    <option value="A">Group A</option>
+  <ul class="instructions-list" id="instructionsContent">
+    <li>
+      <strong>Squad Size & Credits</strong>
+      <span>Select exactly <b>15 players</b> within <b>150 credits</b>.</span>
+    </li>
+
+    <li>
+      <strong>Player Composition</strong>
+      <ul class="sub-rules">
+        <li id="rule-wk">🧤 At least 1 Wicket-Keeper</li>
+        <li id="rule-bat">🏏 At most 6 Batters</li>
+        <li id="rule-bowl">🎯 At most 6 Bowlers</li>
+        <li id="rule-ar">⚖️ At most 4 All-Rounders</li>
+        <li id="rule-team">🌍 Max 4 players from one team</li>
+      </ul>
+    </li>
+
+    <li>
+      🔍 Use <b>filters</b> to quickly find players.
+    </li>
+
+    <li>
+      ⚡ Use <b>Auto Pick</b> to generate a smart squad.
+    </li>
+
+    <li>
+      ✅ When ready, click <b>Submit Squad</b> to lock your team.
+    </li>
+  </ul>
+</div>
+  
+  <div class="toolbar">
+  <div class="filters">
+    <input type="text" id="search" placeholder="Search player">
+    <select id="categoryFilter">
+      <option value="">All Categories</option>
+      <option value="Batter">Batter</option>
+      <option value="Bowler">Bowler</option>
+      <option value="All-Rounder">All-Rounder</option>
+      <option value="Wicket-Keeper">Wicket-Keeper</option>
+    </select>
+    <select id="teamFilter">
+      <option value="">All Teams</option>
+    </select>
+    <select id="groupFilter">
+      <option value="">All Groups</option>
+      <option value="A">Group A</option>
     <option value="B">Group B</option>
     <option value="C">Group C</option>
     <option value="D">Group D</option>
@@ -51,26 +84,47 @@
 </div>
 
 <button onclick="autoPick()" type="button">⚡ Auto Pick</button>
+</div>
 
 <div class="container">
+  
   <div class="players" id="playerList"></div>
+  
+  <div class="side-panel">
+    
+    <div class="user-box">
+      <input type="text" id="userName" placeholder="Enter your name">
+      <button type="button" onclick="saveUser()">Save Name</button>
+    </div>
+
+    <!-- CURRENT SQUAD -->
   <div class="squad">
-  <h3>Your Squad (Max 15)</h3>
+    <h3>Your Squad (Max 15)</h3>
 
-  <ul id="squadList"></ul>
+    <table id="squadList" class="squad-table"></table>
 
-  <div class="validation" id="validationPanel"></div>
+    <div class="validation" id="validationPanel"></div>
 
-  <p>Total Credits: <span id="creditsUsed">0</span> / 150</p>
+    <p>Total Credits: <span id="creditsUsed">0</span> / 150</p>
 
-  <button type="button" id="submitBtn" onclick="openPreview()" disabled>Submit Squad</button>
+    <button type="button" id="submitBtn" onclick="openPreview()" disabled>
+      Submit Squad
+    </button>
 
+    <button id="clearBtn" type="button" onclick="clearSquad()">Clear Squad</button>
 
-  <button type="button" onclick="clearSquad()">🗑 Clear Squad</button>
+    <p id="status"></p>
+  </div>
 
-  <p id="status"></p>
+  <!-- LAST SUBMITTED (READ-ONLY) -->
+  <div class="squad readonly">
+    <h3>Last Submitted Squad</h3>
+    <p id="lastSubmittedMeta" class="muted"></p>
+    <table id="lastSquadTable" class="squad-table"></table>
+  </div>
+
 </div>
-</div>
+
 </div>
 
 <script src="players.js"></script>
@@ -79,7 +133,7 @@
 <div id="previewModal" class="modal">
   <div class="modal-box">
     <h3>Confirm Your Squad</h3>
-    <ul id="previewList"></ul>
+    <div id="previewList"></div>
     <p><strong>Total Credits:</strong> <span id="previewCredits"></span></p>
     <div class="modal-actions">
       <button onclick="closePreview()">Cancel</button>

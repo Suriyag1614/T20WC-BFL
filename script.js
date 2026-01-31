@@ -1,6 +1,7 @@
 // === SUBMISSION LOCK CONFIG ===
 const SUBMISSION_DEADLINE = new Date("2026-02-06T18:00:00"); // change later
 let submissionLocked = false;
+let isSubmitting = false;
 
 let ownership = {};
 let squad = [];
@@ -40,10 +41,11 @@ window.onload = () => {
 
   const saved = localStorage.getItem("fantasy_user");
   if (saved) userNameInput.value = saved;
-  validationPanel.innerHTML =
-      `<p class="ok">➕ Start building your squad</p>`;
   populateTeamFilter();
   applyFilters();
+  renderLastSubmittedSquad();
+  renderSquad();
+  updateActionButtons();
 };
 
 setInterval(checkSubmissionLock, 1000);
@@ -97,9 +99,10 @@ function renderPlayers(data) {
       <div class="player-footer">
         <span>🪙 ${p.credits}</span>
         <button
-          class="${selected ? "disabled" : "add"}"
-          ${selected ? "disabled" : `onclick="addPlayer('${p.id}')"`}>
-          ${selected ? "Selected" : "Add"}
+          class="player-btn ${selected ? "selected" : "add"}"
+          ${selected ? "disabled" : ""}
+          onclick="${selected ? "" : `addPlayer('${p.id}')`}">
+          ${selected ? "✔ Selected" : "Add"}
         </button>
       </div>
     `;
@@ -110,28 +113,58 @@ function renderPlayers(data) {
 
 /* Render Squad */
 function renderSquad() {
-  squadList.innerHTML = "";
+  const table = document.getElementById("squadList");
+
+  table.innerHTML = `
+    <tr>
+      <th>#</th>
+      <th>Name</th>
+      <th>Category</th>
+      <th>Team</th>
+      <th>Credits</th>
+      <th>Role</th>
+      <th></th>
+    </tr>
+  `;
 
   squad.forEach((p, i) => {
-    const li = document.createElement("li");
+    const isC = p.id === captainId;
+    const isVC = p.id === viceCaptainId;
 
-    const isC = p.id === captainId ? "active" : "";
-    const isVC = p.id === viceCaptainId ? "active" : "";
-
-    li.innerHTML = `
-      ${p.name} (${p.credits})
-      <span class="badge ${isC}" onclick="setCaptain('${p.id}')">C</span>
-      <span class="badge ${isVC}" onclick="setViceCaptain('${p.id}')">VC</span>
-      <button onclick="removePlayer(${i})">❌</button>
+    table.innerHTML += `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${p.name}</td>
+        <td>${p.category}</td>
+        <td>${p.team}</td>
+        <td>${p.credits}</td>
+        <td>
+          <label>
+            <input type="radio" name="captain" 
+              ${isC ? "checked" : ""} 
+              onclick="setCaptain('${p.id}')"> C
+          </label>
+          <br>
+          <label>
+            <input type="radio" name="viceCaptain" 
+              ${isVC ? "checked" : ""} 
+              onclick="setViceCaptain('${p.id}')"> VC
+          </label>
+        </td>
+        <td>
+          <button type="button" onclick="removePlayer(${i})">❌</button>
+        </td>
+      </tr>
     `;
-
-    squadList.appendChild(li);
   });
 
   creditsUsedEl.textContent = usedCredits;
-  validateSquad();
+  if (squad.length === 0) {
+    renderEmptySquadState();
+  } else {
+    validateSquad();
+  }
 }
-
 
 /* Add player with category & credit limits */
 function addPlayer(id) {
@@ -157,6 +190,9 @@ if (teamCount >= 4) {
   usedCredits += p.credits;
   renderSquad();
   applyFilters();
+  updateActionButtons();
+  updateRuleHighlights();
+  requestAnimationFrame(() => applyFilters());
 }
 
 /* Remove player */
@@ -171,6 +207,9 @@ function removePlayer(index) {
 
   renderSquad();
   applyFilters();
+  updateActionButtons();
+  updateRuleHighlights();
+  requestAnimationFrame(() => applyFilters());
 }
 
 
@@ -181,7 +220,10 @@ function submitSquad() {
     showToast("Submission closed");
     return;
   }
-
+  
+  if (isSubmitting) return;
+  isSubmitting = true;
+  
    const user = localStorage.getItem("fantasy_user");
   if (!user) {
     showToast("Save your name first");
@@ -220,9 +262,20 @@ fetch("https://script.google.com/macros/s/AKfycbzMa87xtpeYpGht-R3gud0XTcoDZ4u_3_
   if (resp.status !== "success") {
     throw new Error(resp.message || "Server error");
   }
+  
   statusEl.textContent = "Submitted successfully!";
   showToast("✅ Squad submitted!");
-  resetCycle();
+  localStorage.setItem("last_submission", JSON.stringify({
+  squad,
+  captainId,
+  viceCaptainId,
+  totalCredits: usedCredits,
+  submittedAt: new Date().toISOString()
+}));
+submitBtn.disabled = true;
+renderLastSubmittedSquad();
+resetCycle(true);
+updateActionButtons();
 })
 .catch(err => {
   console.error(err);
@@ -232,21 +285,32 @@ fetch("https://script.google.com/macros/s/AKfycbzMa87xtpeYpGht-R3gud0XTcoDZ4u_3_
 .finally(() => {
   hideOverlay();
   submitBtn.disabled = false;
+  isSubmitting = false;
 });
 
 }
 
-
 /* Reset squad */
-function resetCycle() {
+function resetCycle(fromSubmit = false, silent = false) {
   squad = [];
   usedCredits = 0;
   captainId = null;
   viceCaptainId = null;
-  renderSquad();
-  applyFilters();
-}
 
+  if (!silent) {
+    if (fromSubmit) {
+      validationPanel.innerHTML =
+        `<p class="ok">✅ Submission completed. Build a new squad.</p>`;
+      submitBtn.disabled = true;
+    }
+
+    renderSquad();
+    applyFilters();
+    updateActionButtons();
+    updateRuleHighlights();
+    requestAnimationFrame(() => applyFilters());
+  }
+}
 
 function setCaptain(id) {
   if (viceCaptainId === id) {
@@ -268,17 +332,17 @@ function setViceCaptain(id) {
 
 function validateSquad() {
 
-  // 🧼 Fresh state: no players selected
+  if (isSubmitting) return;
+
+  // ✅ EMPTY STATE (first load, refresh, clear, recycle)
   if (squad.length === 0) {
-    validationPanel.innerHTML =
-  `<p class="ok">✅ Submission completed. You can resubmit a new squad.</p>`;
-    submitBtn.disabled = true;
+    renderEmptySquadState();
     return;
   }
 
   let valid = true;
   const lines = [];
-  
+
   // Player count
   const pc = squad.length;
   lines.push(
@@ -349,7 +413,6 @@ function validateSquad() {
   }
 
   validationPanel.innerHTML = lines.join("");
-  submitBtn.disabled = !valid;
 }
 
 function addPlayerAuto(p, categoryCount, teamCount, limits) {
@@ -367,15 +430,12 @@ function addPlayerAuto(p, categoryCount, teamCount, limits) {
 }
 
 function autoPick() {
-  console.log("AutoPick triggered", players.length, ownership);
-
   if (submissionLocked) {
-  showToast("Submissions are locked");
-  return;
+    showToast("Submissions are locked");
+    return;
   }
 
-  // Reset first
-  resetCycle();
+  resetCycle(false, true);
 
   const limits = {
     "Wicket-Keeper": 2,
@@ -391,48 +451,44 @@ function autoPick() {
     "All-Rounder": 0
   };
 
-  // Sort players by credits (desc) – smarter picks first
-  const sorted = [...players].sort((a, b) =>
-  (b.credits * (ownership[b.id] || 1)) -
-  (a.credits * (ownership[a.id] || 1))
-);
+  const teamCount = {};
 
-players
-  .filter(p => p.category === "Wicket-Keeper")
-  .slice(0, 1)
-  .forEach(p => {
-    squad.push(p);
-    usedCredits += p.credits;
-    categoryCount[p.category]++;
+  const sorted = [...players].sort((a, b) =>
+    (ownership[b.id] || 0) - (ownership[a.id] || 0)
+  );
+
+  // Step 1: Ensure at least 1 WK
+  sorted
+    .filter(p => p.category === "Wicket-Keeper")
+    .some(p => addPlayerAuto(p, categoryCount, teamCount, limits));
+
+  // Step 2: Fill remaining slots
+  sorted.forEach(p => {
+    if (squad.length >= MAX_PLAYERS) return;
+    addPlayerAuto(p, categoryCount, teamCount, limits);
   });
 
-const teamCount = {};
-squad.forEach(p => {
-  teamCount[p.team] = (teamCount[p.team] || 0) + 1;
-});
-
-sorted.forEach(p => {
-  if (squad.length >= MAX_PLAYERS) return;
-  addPlayerAuto(p, categoryCount, teamCount, limits);
-});
-
-  // Auto-assign Captain & VC (highest credit players)
+  // Step 3: Auto C / VC
   if (squad.length >= 2) {
-    squad.sort((a, b) => b.credits - a.credits);
-    captainId = squad[0].id;
-    viceCaptainId = squad[1].id;
-
+    const ranked = [...squad].sort((a, b) => b.credits - a.credits);
+    captainId = ranked[0].id;
+    viceCaptainId = ranked[1].id;
   }
 
   renderSquad();
   applyFilters();
+  updateActionButtons();
+  updateRuleHighlights();
+  requestAnimationFrame(() => applyFilters());
 }
+
 
 function clearSquad() {
   if(confirm("Are you sure you want to clear your squad?")) {
     resetCycle();
   }
 }
+
 
 function showToast(message) {
   const existing = document.querySelector(".toast");
@@ -487,16 +543,30 @@ function hideOverlay() {
 
 function openPreview() {
   const list = document.getElementById("previewList");
-  list.innerHTML = "";
 
-  squad.forEach(p => {
-    const li = document.createElement("li");
-    li.textContent =
-      `${p.name} (${p.category})` +
-      (p.id === captainId ? " [C]" : "") +
-      (p.id === viceCaptainId ? " [VC]" : "");
-    list.appendChild(li);
-  });
+  list.innerHTML = `
+    <table class="squad-table">
+      <tr>
+        <th>#</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Team</th>
+        <th>Role</th>
+      </tr>
+      ${squad.map((p, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${p.name}</td>
+          <td>${p.category}</td>
+          <td>${p.team}</td>
+          <td>
+            ${p.id === captainId ? "C" : ""}
+            ${p.id === viceCaptainId ? "VC" : ""}
+          </td>
+        </tr>
+      `).join("")}
+    </table>
+  `;
 
   document.getElementById("previewCredits").textContent = usedCredits;
   document.getElementById("previewModal").classList.add("show");
@@ -509,4 +579,101 @@ function closePreview() {
 function confirmSubmit() {
   closePreview();
   submitSquad();
+}
+
+function renderLastSubmittedSquad() {
+  const data = JSON.parse(localStorage.getItem("last_submission"));
+  if (!data) return;
+
+  const meta = document.getElementById("lastSubmittedMeta");
+  if (data.submittedAt) {
+    const dt = new Date(data.submittedAt);
+    meta.textContent =
+      `Submitted on ${dt.toLocaleDateString()} at ${dt.toLocaleTimeString()}`;
+  }
+
+  const table = document.getElementById("lastSquadTable");
+
+  table.innerHTML = `
+    <tr>
+      <th>#</th>
+      <th>Name</th>
+      <th>Category</th>
+      <th>Team</th>
+      <th>Credits</th>
+      <th>Role</th>
+    </tr>
+  `;
+
+  data.squad.forEach((p, i) => {
+    const role =
+      p.id === data.captainId ? "C" :
+      p.id === data.viceCaptainId ? "VC" : "";
+
+    table.innerHTML += `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${p.name}</td>
+        <td>${p.category}</td>
+        <td>${p.team}</td>
+        <td>${p.credits}</td>
+        <td>${role}</td>
+      </tr>
+    `;
+  });
+}
+
+function updateActionButtons() {
+  // Submit: only when exactly 15 players
+  submitBtn.disabled = squad.length !== MAX_PLAYERS;
+
+  // Clear: only when squad not empty
+  const clearBtn = document.getElementById("clearBtn");
+  if (clearBtn) {
+    clearBtn.disabled = squad.length === 0;
+  }
+}
+
+function toggleInstructions() {
+  const box = document.getElementById("instructionsBox");
+  const toggle = document.getElementById("instructionsToggle");
+
+  box.classList.toggle("collapsed");
+
+  const collapsed = box.classList.contains("collapsed");
+  toggle.textContent = collapsed ? "▲" : "▼";
+
+  localStorage.setItem("instructions_collapsed", collapsed);
+}
+
+// Restore state on load
+window.addEventListener("load", () => {
+  const collapsed = localStorage.getItem("instructions_collapsed") === "true";
+  if (collapsed) toggleInstructions();
+});
+
+function updateRuleHighlights() {
+  const count = cat =>
+    squad.filter(p => p.category === cat).length;
+
+  const setRule = (id, ok) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = ok ? "rule-ok" : "rule-bad";
+  };
+
+  setRule("rule-wk", count("Wicket-Keeper") >= 1);
+  setRule("rule-bat", count("Batter") <= 6);
+  setRule("rule-bowl", count("Bowler") <= 6);
+  setRule("rule-ar", count("All-Rounder") <= 4);
+
+  const teams = {};
+  squad.forEach(p => teams[p.team] = (teams[p.team] || 0) + 1);
+  setRule("rule-team", Object.values(teams).every(v => v <= 4));
+}
+
+function renderEmptySquadState() {
+  validationPanel.innerHTML =
+    `<p class="ok">➕ Add players to start building your squad</p>`;
+  submitBtn.disabled = true;
 }
