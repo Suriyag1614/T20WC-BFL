@@ -34,12 +34,14 @@ function saveUser() {
 
 /* Load user & populate team filter */
 window.onload = () => {
-  fetch("https://script.google.com/macros/s/AKfycbyYYG1satS2GD4ffjo_dOHEEOLtyhJwDcFxbQgXJ5VDLyUmlkjCsvRZU8Qz_0NacBWA/exec")
+  fetch("https://script.google.com/macros/s/AKfycbzMa87xtpeYpGht-R3gud0XTcoDZ4u_3_nY9WHGCSpY3qLKbG6edNsrtseiTlYXNbtg/exec")
   .then(r => r.json())
   .then(d => ownership = d);
 
   const saved = localStorage.getItem("fantasy_user");
   if (saved) userNameInput.value = saved;
+  validationPanel.innerHTML =
+      `<p class="ok">➕ Start building your squad</p>`;
   populateTeamFilter();
   applyFilters();
 };
@@ -200,20 +202,20 @@ statusEl.textContent = "Submitting...";
 showOverlay();
 submitBtn.disabled = true;
 
-fetch("https://script.google.com/macros/s/AKfycbyYYG1satS2GD4ffjo_dOHEEOLtyhJwDcFxbQgXJ5VDLyUmlkjCsvRZU8Qz_0NacBWA/exec", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    user,
-    captainId,
-    viceCaptainId,
-    squad,
-    totalCredits: usedCredits
-  })
-})
-.then(r => r.text())
-.then(t => JSON.parse(t))
+const formData = new URLSearchParams();
+formData.append("payload", JSON.stringify({
+  user,
+  captainId,
+  viceCaptainId,
+  squad,
+  totalCredits: usedCredits
+}));
 
+fetch("https://script.google.com/macros/s/AKfycbzMa87xtpeYpGht-R3gud0XTcoDZ4u_3_nY9WHGCSpY3qLKbG6edNsrtseiTlYXNbtg/exec", {
+  method: "POST",
+  body: formData
+})
+.then(r => r.json())
 .then(resp => {
   if (resp.status !== "success") {
     throw new Error(resp.message || "Server error");
@@ -265,9 +267,18 @@ function setViceCaptain(id) {
 }
 
 function validateSquad() {
+
+  // 🧼 Fresh state: no players selected
+  if (squad.length === 0) {
+    validationPanel.innerHTML =
+  `<p class="ok">✅ Submission completed. You can resubmit a new squad.</p>`;
+    submitBtn.disabled = true;
+    return;
+  }
+
   let valid = true;
   const lines = [];
-
+  
   // Player count
   const pc = squad.length;
   lines.push(
