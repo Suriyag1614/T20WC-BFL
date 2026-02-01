@@ -83,7 +83,9 @@
   </select>
 </div>
 
-<button onclick="autoPick()" type="button">⚡ Auto Pick</button>
+<button onclick="autoPick()" type="button" class="btn btn-warning">
+  Auto Pick
+</button>
 </div>
 
 <div class="container">
@@ -107,11 +109,20 @@
 
     <p>Total Credits: <span id="creditsUsed">0</span> / 150</p>
 
-    <button type="button" id="submitBtn" onclick="openPreview()" disabled>
-      Submit Squad
-    </button>
+    <button
+  type="button"
+  id="submitBtn"
+  onclick="openPreview()"
+  class="btn btn-primary"
+  disabled
+>
+  Submit Squad
+</button>
 
-    <button id="clearBtn" type="button" onclick="clearSquad()">Clear Squad</button>
+
+<button id="clearBtn" type="button" onclick="clearSquad()" class="btn btn-danger">
+  Clear Squad
+</button>
 
     <p id="status"></p>
   </div>
@@ -136,15 +147,19 @@
     <div id="previewList"></div>
     <p><strong>Total Credits:</strong> <span id="previewCredits"></span></p>
     <div class="modal-actions">
-      <button onclick="closePreview()">Cancel</button>
-      <button class="primary" onclick="confirmSubmit()">Confirm & Submit</button>
+<button onclick="closePreview()" class="btn btn-danger btn-block">
+  Cancel
+</button>
+<button onclick="confirmSubmit()" class="btn btn-success btn-block">
+  Lock & Submit
+</button>
     </div>
   </div>
 </div>
 
 <div id="overlay">
   <div class="spinner"></div>
-  <p>Submitting your squad…</p>
+  <p>Submitting Your Squad…</p>
 </div>
 
 </body>

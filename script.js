@@ -3,7 +3,6 @@ const SUBMISSION_DEADLINE = new Date("2026-02-06T18:00:00"); // change later
 let submissionLocked = false;
 let isSubmitting = false;
 
-let ownership = {};
 let squad = [];
 let usedCredits = 0;
 const MAX_PLAYERS = 15;
@@ -35,10 +34,6 @@ function saveUser() {
 
 /* Load user & populate team filter */
 window.onload = () => {
-  fetch("https://script.google.com/macros/s/AKfycbzMa87xtpeYpGht-R3gud0XTcoDZ4u_3_nY9WHGCSpY3qLKbG6edNsrtseiTlYXNbtg/exec")
-  .then(r => r.json())
-  .then(d => ownership = d);
-
   const saved = localStorage.getItem("fantasy_user");
   if (saved) userNameInput.value = saved;
   populateTeamFilter();
@@ -91,8 +86,6 @@ function renderPlayers(data) {
             <img src="logos/${p.team}.png" class="player-logo">
           </div>
           ${p.category} | ${p.team} | Group ${p.group}<br>
-          <span>📈 Selected By ${ownership[p.id] || 0}% Users</span>
-
         </div>
       </div>
 
@@ -253,7 +246,7 @@ formData.append("payload", JSON.stringify({
   totalCredits: usedCredits
 }));
 
-fetch("https://script.google.com/macros/s/AKfycbzMa87xtpeYpGht-R3gud0XTcoDZ4u_3_nY9WHGCSpY3qLKbG6edNsrtseiTlYXNbtg/exec", {
+fetch("https://script.google.com/macros/s/AKfycbw4j6WsC2yHE6qz4Bs8F3cfO7cLN0Qcc0tnl_pJo4gHFUys6V4mPUXN2lk-drdi2Hk/exec", {
   method: "POST",
   body: formData
 })
@@ -453,9 +446,7 @@ function autoPick() {
 
   const teamCount = {};
 
-  const sorted = [...players].sort((a, b) =>
-    (ownership[b.id] || 0) - (ownership[a.id] || 0)
-  );
+  const sorted = [...players].sort((a, b) => b.credits - a.credits);
 
   // Step 1: Ensure at least 1 WK
   sorted
@@ -588,8 +579,15 @@ function renderLastSubmittedSquad() {
   const meta = document.getElementById("lastSubmittedMeta");
   if (data.submittedAt) {
     const dt = new Date(data.submittedAt);
+
+    const datePart = dt.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+
     meta.textContent =
-      `Submitted on ${dt.toLocaleDateString()} at ${dt.toLocaleTimeString()}`;
+      `Submitted on ${datePart} at ${dt.toLocaleTimeString()}`;
   }
 
   const table = document.getElementById("lastSquadTable");
