@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>T20WC 2026 – Fantasy Squad</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 <header class="app-header">
@@ -12,7 +13,7 @@
   <img src="logos/T20WC.png" class="logo right">
 </header>
 
-<div id="lockPanel" class="lock-panel floating-timer">
+<div id="lockPanel" class="floating-timer">
   <p id="countdownText"></p>
 </div>
 
@@ -58,7 +59,7 @@
   
   <div class="toolbar">
   <div class="filters">
-    <input type="text" id="search" placeholder="Search player">
+    <input type="text" id="search" placeholder="Search Player by Name">
     <select id="categoryFilter">
       <option value="">All Categories</option>
       <option value="Batter">Batter</option>
@@ -81,6 +82,8 @@
     <option value="asc">Low → High</option>
     <option value="desc">High → Low</option>
   </select>
+  <button id="clearFiltersBtn" class="btn">Clear All Filters</button>
+
 </div>
 
 <button onclick="autoPick()" type="button" class="btn btn-warning">
@@ -96,7 +99,7 @@
     
     <div class="user-box">
       <input type="text" id="userName" placeholder="Enter your name">
-      <button type="button" onclick="saveUser()">Save Name</button>
+      <button type="button" class="btn" onclick="saveUser()">Save Name</button>
     </div>
 
     <!-- CURRENT SQUAD -->

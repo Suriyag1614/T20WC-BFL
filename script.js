@@ -2,6 +2,7 @@
 const SUBMISSION_DEADLINE = new Date("2026-02-06T18:00:00"); // change later
 let submissionLocked = false;
 let isSubmitting = false;
+let squadSubmitted = false;  // <-- Track if squad has been submitted
 
 let squad = [];
 let usedCredits = 0;
@@ -54,6 +55,20 @@ function populateTeamFilter() {
   });
 }
 
+const clearFiltersBtn = document.getElementById("clearFiltersBtn");
+
+clearFiltersBtn.addEventListener("click", () => {
+  // Clear all filters
+  searchInput.value = "";
+  categoryFilter.value = "";
+  teamFilter.value = "";
+  groupFilter.value = "";
+  sortCredits.value = "";
+
+  applyFilters();       // re-render player list
+  updateActionButtons(); // optional
+});
+
 /* Filter/Search/Sort */
 function applyFilters() {
   let data = [...players];
@@ -70,39 +85,40 @@ function applyFilters() {
 
 /* Render Player List */
 function renderPlayers(data) {
-  playerList.innerHTML = "";
+  playerList.innerHTML = ""; // clears previous cards
 
-  data.forEach(p => {
+  data.forEach((p, index) => {
     const selected = squad.some(s => s.id === p.id);
-
     const card = document.createElement("div");
     card.className = `player-card ${selected ? "selected" : ""}`;
-
+    
     card.innerHTML = `
       <div>
         <div class="player-name">${p.name}</div>
         <div class="player-meta">
-          <div>
-            <img src="logos/${p.team}.png" class="player-logo">
-          </div>
+          <div><img src="logos/${p.team}.png" class="player-logo"></div>
           ${p.category} | ${p.team} | Group ${p.group}<br>
         </div>
       </div>
-
       <div class="player-footer">
         <span>🪙 ${p.credits}</span>
-        <button
-          class="player-btn ${selected ? "selected" : "add"}"
-          ${selected ? "disabled" : ""}
-          onclick="${selected ? "" : `addPlayer('${p.id}')`}">
+        <button class="player-btn ${selected ? "selected" : "add"}"
+                ${selected ? "disabled" : ""} 
+                onclick="${selected ? "" : `addPlayer('${p.id}')`}">
           ${selected ? "✔ Selected" : "Add"}
         </button>
       </div>
     `;
 
     playerList.appendChild(card);
+
+    // staggered fade-in
+    requestAnimationFrame(() => {
+      setTimeout(() => card.classList.add("show"), index * 50);
+    });
   });
 }
+
 
 /* Render Squad */
 function renderSquad() {
@@ -150,6 +166,9 @@ function renderSquad() {
       </tr>
     `;
   });
+  // After filling the table
+const rows = squadList.querySelectorAll("tr:not(.show)");
+rows.forEach(row => requestAnimationFrame(() => row.classList.add("show")));
 
   creditsUsedEl.textContent = usedCredits;
   if (squad.length === 0) {
@@ -161,32 +180,38 @@ function renderSquad() {
 
 /* Add player with category & credit limits */
 function addPlayer(id) {
+  // Reset submission flag if user starts building a new squad
+  if (squadSubmitted) squadSubmitted = false;
 
   if (squad.length >= MAX_PLAYERS) { showToast("Max 15 players"); return; }
   const p = players.find(x => x.id === id);
   if (!p) return;
   if (usedCredits + p.credits > MAX_CREDITS) { showToast("Credit limit exceeded"); return; }
 
-  // Category limits
   const categoryCount = squad.filter(x => x.category === p.category).length;
   const limits = { "Wicket-Keeper": 2, "Batter": 6, "Bowler": 6, "All-Rounder": 4 };
   if (categoryCount >= limits[p.category]) { showToast(`Max ${limits[p.category]} ${p.category}s allowed`); return; }
 
-  // Team-wise limit check
-const teamCount = squad.filter(x => x.team === p.team).length;
-if (teamCount >= 4) { 
-  showToast(`Max 4 players allowed from ${p.team}`);
-  return;
-}
+  const teamCount = squad.filter(x => x.team === p.team).length;
+  if (teamCount >= 4) { showToast(`Max 4 players allowed from ${p.team}`); return; }
 
   squad.push(p);
   usedCredits += p.credits;
+
+  renderPlayers(players);
+  // After rendering players
+const newCards = document.querySelectorAll(".player-card:not(.show)");
+newCards.forEach(card => {
+  requestAnimationFrame(() => card.classList.add("show"));
+});
+
   renderSquad();
   applyFilters();
   updateActionButtons();
   updateRuleHighlights();
   requestAnimationFrame(() => applyFilters());
 }
+
 
 /* Remove player */
 function removePlayer(index) {
@@ -255,21 +280,26 @@ fetch("https://script.google.com/macros/s/AKfycbw4j6WsC2yHE6qz4Bs8F3cfO7cLN0Qcc0
   if (resp.status !== "success") {
     throw new Error(resp.message || "Server error");
   }
-  
+
   statusEl.textContent = "Submitted successfully!";
-  showToast("✅ Squad submitted!");
-  localStorage.setItem("last_submission", JSON.stringify({
+showToast("✅ Squad submitted!");
+
+localStorage.setItem("last_submission", JSON.stringify({
   squad,
   captainId,
   viceCaptainId,
   totalCredits: usedCredits,
   submittedAt: new Date().toISOString()
 }));
-submitBtn.disabled = true;
+
+// Mark squad as submitted
+squadSubmitted = true;
 renderLastSubmittedSquad();
-resetCycle(true);
+resetCycle(true);  
 updateActionButtons();
+
 })
+
 .catch(err => {
   console.error(err);
   statusEl.textContent = "Submission failed!";
@@ -280,7 +310,6 @@ updateActionButtons();
   submitBtn.disabled = false;
   isSubmitting = false;
 });
-
 }
 
 /* Reset squad */
@@ -290,11 +319,15 @@ function resetCycle(fromSubmit = false, silent = false) {
   captainId = null;
   viceCaptainId = null;
 
+  // After a submission, Clear should stay disabled
+  if (fromSubmit) {
+    squadSubmitted = true;
+  }
+
   if (!silent) {
     if (fromSubmit) {
       validationPanel.innerHTML =
         `<p class="ok">✅ Submission completed. Build a new squad.</p>`;
-      submitBtn.disabled = true;
     }
 
     renderSquad();
@@ -622,13 +655,13 @@ function renderLastSubmittedSquad() {
 }
 
 function updateActionButtons() {
-  // Submit: only when exactly 15 players
-  submitBtn.disabled = squad.length !== MAX_PLAYERS;
+  // Submit: only when exactly 15 players AND squad not submitted
+  submitBtn.disabled = squad.length !== MAX_PLAYERS || squadSubmitted;
 
-  // Clear: only when squad not empty
+  // Clear: only when squad not empty AND not submitted
   const clearBtn = document.getElementById("clearBtn");
   if (clearBtn) {
-    clearBtn.disabled = squad.length === 0;
+    clearBtn.disabled = squad.length === 0 || squadSubmitted;
   }
 }
 
@@ -639,7 +672,7 @@ function toggleInstructions() {
   box.classList.toggle("collapsed");
 
   const collapsed = box.classList.contains("collapsed");
-  toggle.textContent = collapsed ? "▲" : "▼";
+  toggle.textContent = collapsed ? "➕" : "➖";
 
   localStorage.setItem("instructions_collapsed", collapsed);
 }
