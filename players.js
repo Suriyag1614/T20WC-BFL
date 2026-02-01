@@ -1,5 +1,5 @@
 const players = [
-  { id: "P001", name: "Virat Kohli", category: "Batter", team: "IND", group: "A", credits: 10 },
+  { id: "P001", name: "Virat Kohli", category: "Batter", team: "IND", group: "A", credits: 20 },
   { id: "P002", name: "Rohit Sharma", category: "Batter", team: "IND", group: "A", credits: 9 },
   { id: "P003", name: "Jasprit Bumrah", category: "Bowler", team: "IND", group: "A", credits: 9 },
   { id: "P004", name: "Hardik Pandya", category: "All-Rounder", team: "IND", group: "A", credits: 9.5 },

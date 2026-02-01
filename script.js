@@ -119,7 +119,6 @@ function renderPlayers(data) {
   });
 }
 
-
 /* Render Squad */
 function renderSquad() {
   const table = document.getElementById("squadList");
@@ -132,7 +131,7 @@ function renderSquad() {
       <th>Team</th>
       <th>Credits</th>
       <th>Role</th>
-      <th></th>
+      <th>Remove</th>
     </tr>
   `;
 
@@ -161,16 +160,21 @@ function renderSquad() {
           </label>
         </td>
         <td>
-          <button type="button" onclick="removePlayer(${i})">❌</button>
+          <button type="button" class="btn" onclick="removePlayer(${i})">❌</button>
         </td>
       </tr>
     `;
   });
+
   // After filling the table
 const rows = squadList.querySelectorAll("tr:not(.show)");
 rows.forEach(row => requestAnimationFrame(() => row.classList.add("show")));
 
   creditsUsedEl.textContent = usedCredits;
+  document.getElementById("playersCount").textContent = squad.length;
+  document.getElementById("creditsUsed").textContent = usedCredits;
+
+  // Validate squad
   if (squad.length === 0) {
     renderEmptySquadState();
   } else {
@@ -212,7 +216,6 @@ newCards.forEach(card => {
   requestAnimationFrame(() => applyFilters());
 }
 
-
 /* Remove player */
 function removePlayer(index) {
   const p = squad[index];
@@ -229,7 +232,6 @@ function removePlayer(index) {
   updateRuleHighlights();
   requestAnimationFrame(() => applyFilters());
 }
-
 
 /* Submit squad */
 function submitSquad() {
@@ -281,7 +283,7 @@ fetch("https://script.google.com/macros/s/AKfycbw4j6WsC2yHE6qz4Bs8F3cfO7cLN0Qcc0
     throw new Error(resp.message || "Server error");
   }
 
-  statusEl.textContent = "Submitted successfully!";
+statusEl.textContent = "Submitted successfully!";
 showToast("✅ Squad submitted!");
 
 localStorage.setItem("last_submission", JSON.stringify({
@@ -297,7 +299,6 @@ squadSubmitted = true;
 renderLastSubmittedSquad();
 resetCycle(true);  
 updateActionButtons();
-
 })
 
 .catch(err => {
@@ -506,13 +507,11 @@ function autoPick() {
   requestAnimationFrame(() => applyFilters());
 }
 
-
 function clearSquad() {
   if(confirm("Are you sure you want to clear your squad?")) {
     resetCycle();
   }
 }
-
 
 function showToast(message) {
   const existing = document.querySelector(".toast");
@@ -527,7 +526,6 @@ function showToast(message) {
     toast.remove();
   }, 5000);
 }
-
 
 function checkSubmissionLock() {
   const now = new Date();

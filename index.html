@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>T20WC 2026 – Fantasy Squad</title>
+  <title>T20WC 2026 – BFL</title>
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
 <header class="app-header">
   <img src="logos/BFL.png" class="logo left">
   <h1>T20WC 2026 – Fantasy Squad Selection</h1>
@@ -18,148 +19,167 @@
 </div>
 
 <div id="appRoot">
-  <!-- everything except header + timer -->
 
+  <!-- INSTRUCTIONS -->
   <div class="instructions" id="instructionsBox">
-  <div class="instructions-header" onclick="toggleInstructions()">
-    📘 Instructions
-    <span id="instructionsToggle">▼</span>
-  </div>
-
-  <ul class="instructions-list" id="instructionsContent">
-    <li>
-      <strong>Squad Size & Credits</strong>
-      <span>Select exactly <b>15 players</b> within <b>150 credits</b>.</span>
-    </li>
-
-    <li>
-      <strong>Player Composition</strong>
-      <ul class="sub-rules">
-        <li id="rule-wk">🧤 At least 1 Wicket-Keeper</li>
-        <li id="rule-bat">🏏 At most 6 Batters</li>
-        <li id="rule-bowl">🎯 At most 6 Bowlers</li>
-        <li id="rule-ar">⚖️ At most 4 All-Rounders</li>
-        <li id="rule-team">🌍 Max 4 players from one team</li>
-      </ul>
-    </li>
-
-    <li>
-      🔍 Use <b>filters</b> to quickly find players.
-    </li>
-
-    <li>
-      ⚡ Use <b>Auto Pick</b> to generate a smart squad.
-    </li>
-
-    <li>
-      ✅ When ready, click <b>Submit Squad</b> to lock your team.
-    </li>
-  </ul>
-</div>
-  
-  <div class="toolbar">
-  <div class="filters">
-    <input type="text" id="search" placeholder="Search Player by Name">
-    <select id="categoryFilter">
-      <option value="">All Categories</option>
-      <option value="Batter">Batter</option>
-      <option value="Bowler">Bowler</option>
-      <option value="All-Rounder">All-Rounder</option>
-      <option value="Wicket-Keeper">Wicket-Keeper</option>
-    </select>
-    <select id="teamFilter">
-      <option value="">All Teams</option>
-    </select>
-    <select id="groupFilter">
-      <option value="">All Groups</option>
-      <option value="A">Group A</option>
-    <option value="B">Group B</option>
-    <option value="C">Group C</option>
-    <option value="D">Group D</option>
-  </select>
-  <select id="sortCredits">
-    <option value="">Sort by Credits</option>
-    <option value="asc">Low → High</option>
-    <option value="desc">High → Low</option>
-  </select>
-  <button id="clearFiltersBtn" class="btn">Clear All Filters</button>
-
-</div>
-
-<button onclick="autoPick()" type="button" class="btn btn-warning">
-  Auto Pick
-</button>
-</div>
-
-<div class="container">
-  
-  <div class="players" id="playerList"></div>
-  
-  <div class="side-panel">
-    
-    <div class="user-box">
-      <input type="text" id="userName" placeholder="Enter your name">
-      <button type="button" class="btn" onclick="saveUser()">Save Name</button>
+    <div class="instructions-header" onclick="toggleInstructions()">
+      📘 Instructions
+      <span id="instructionsToggle">▼</span>
     </div>
 
-    <!-- CURRENT SQUAD -->
-  <div class="squad">
-    <h3>Your Squad (Max 15)</h3>
+    <ul class="instructions-list" id="instructionsContent">
+      <li>
+        <strong>Squad Size & Credits</strong>
+        <span>Select exactly <b>15 players</b> within <b>150 credits</b>.</span>
+      </li>
 
-    <table id="squadList" class="squad-table"></table>
+      <li>
+        <strong>Player Composition</strong>
+        <ul class="sub-rules">
+          <li id="rule-wk">🧤 At least 1 Wicket-Keeper</li>
+          <li id="rule-bat">🏏 At most 6 Batters</li>
+          <li id="rule-bowl">🎯 At most 6 Bowlers</li>
+          <li id="rule-ar">⚖️ At most 4 All-Rounders</li>
+          <li id="rule-team">🌍 Max 4 players from one team</li>
+        </ul>
+      </li>
 
-    <div class="validation" id="validationPanel"></div>
-
-    <p>Total Credits: <span id="creditsUsed">0</span> / 150</p>
-
-    <button
-  type="button"
-  id="submitBtn"
-  onclick="openPreview()"
-  class="btn btn-primary"
-  disabled
->
-  Submit Squad
-</button>
-
-
-<button id="clearBtn" type="button" onclick="clearSquad()" class="btn btn-danger">
-  Clear Squad
-</button>
-
-    <p id="status"></p>
+      <li>🔍 Use <b>filters</b> to quickly find players.</li>
+      <li>⚡ Use <b>Auto Pick</b> to generate a smart squad.</li>
+      <li>✅ When ready, click <b>Submit Squad</b> to lock your team.</li>
+    </ul>
   </div>
 
-  <!-- LAST SUBMITTED (READ-ONLY) -->
-  <div class="squad readonly">
-    <h3>Last Submitted Squad</h3>
-    <p id="lastSubmittedMeta" class="muted"></p>
-    <table id="lastSquadTable" class="squad-table"></table>
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+
+    <div class="filters">
+      <input type="text" id="search" placeholder="Search Player by Name">
+
+      <select id="categoryFilter">
+        <option value="">All Categories</option>
+        <option value="Batter">Batter</option>
+        <option value="Bowler">Bowler</option>
+        <option value="All-Rounder">All-Rounder</option>
+        <option value="Wicket-Keeper">Wicket-Keeper</option>
+      </select>
+
+      <select id="teamFilter">
+        <option value="">All Teams</option>
+      </select>
+
+      <select id="groupFilter">
+        <option value="">All Groups</option>
+        <option value="A">Group A</option>
+        <option value="B">Group B</option>
+        <option value="C">Group C</option>
+        <option value="D">Group D</option>
+      </select>
+
+      <select id="sortCredits">
+        <option value="">Sort by Credits</option>
+        <option value="asc">Low → High</option>
+        <option value="desc">High → Low</option>
+      </select>
+
+      <button id="clearFiltersBtn" class="btn">
+        Clear All Filters
+      </button>
+    </div>
+
+    <!-- ACTION BUTTONS (RIGHT SIDE) -->
+    <div class="toolbar-actions">
+      <button type="button" class="btn btn-warning" onclick="autoPick()">
+        🤖 Auto Pick
+      </button>
+
+      <button
+        type="button"
+        id="submitBtn"
+        class="btn btn-primary"
+        onclick="openPreview()"
+        disabled>
+        Submit Squad
+      </button>
+
+      <button
+        type="button"
+        id="clearBtn"
+        class="btn btn-danger"
+        onclick="clearSquad()"
+        disabled>
+        Clear Squad
+      </button>
+    </div>
+
   </div>
 
+  <!-- MAIN CONTENT -->
+  <div class="container">
+
+    <div class="players" id="playerList"></div>
+
+    <div class="side-panel">
+
+      <div class="user-box">
+        <input type="text" id="userName" placeholder="Enter your name">
+        <button type="button" class="btn" onclick="saveUser()">Save Name</button>
+      </div>
+
+      <!-- CURRENT SQUAD -->
+<div class="squad">
+  <h3>Your T20WC 2026 Squad</h3>
+
+  <p>
+    Players Selected:
+    <span id="playersCount">0</span> / 15
+  </p>
+
+  <p>
+    Total Credits:
+    <span id="creditsUsed">0</span> / 150
+  </p>
+
+  <p id="status"></p>
+
+  <!-- VALIDATION FIRST -->
+  <div class="validation" id="validationPanel"></div>
+
+  <!-- THEN SQUAD LIST -->
+  <table id="squadList" class="squad-table"></table>
 </div>
+
+
+      <!-- LAST SUBMITTED -->
+      <div class="squad readonly">
+        <h3>Last Submitted Squad</h3>
+        <p id="lastSubmittedMeta" class="muted"></p>
+        <table id="lastSquadTable" class="squad-table"></table>
+      </div>
+
+    </div>
+  </div>
 
 </div>
 
 <script src="players.js"></script>
 <script src="script.js"></script>
 
+<!-- PREVIEW MODAL -->
 <div id="previewModal" class="modal">
   <div class="modal-box">
     <h3>Confirm Your Squad</h3>
     <div id="previewList"></div>
     <p><strong>Total Credits:</strong> <span id="previewCredits"></span></p>
+
     <div class="modal-actions">
-<button onclick="closePreview()" class="btn btn-danger btn-block">
-  Cancel
-</button>
-<button onclick="confirmSubmit()" class="btn btn-success btn-block">
-  Lock & Submit
-</button>
+      <button class="btn btn-danger btn-block" onclick="closePreview()">Cancel</button>
+      <button class="btn btn-success btn-block" onclick="confirmSubmit()">🔒 Lock & Submit</button>
     </div>
   </div>
 </div>
 
+<!-- OVERLAY -->
 <div id="overlay">
   <div class="spinner"></div>
   <p>Submitting Your Squad…</p>

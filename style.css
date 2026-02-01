@@ -49,8 +49,8 @@ h1, h2, h3,
 }
 
 h1 { font-size: 48px; text-align: center; }
-h2 { font-size: 32px; }
-h3 { font-size: 24px; }
+h2 { font-size: 40px; text-align: center; }
+h3 { font-size: 32px; text-align: center; color: var(--accent-orange);}
 
 .highlight { color: var(--accent-orange); }
 .muted {
@@ -69,6 +69,9 @@ h3 { font-size: 24px; }
 .validation {
   background: linear-gradient(160deg, var(--bg-panel), var(--bg-secondary));
   border-radius: 18px;
+  padding: 8px 10px;
+  font-weight: 500;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
   color: var(--text-primary);
 }
 
@@ -91,16 +94,13 @@ h3 { font-size: 24px; }
   flex: 1;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-
   gap: 10px;             /* row + column spacing */
-
   align-items: start;    /* items don't stretch */
   align-content: start;  /* rows don't spread in tall viewport */
 }
 
 .toolbar {
   display: flex;
-  justify-content: space-between;
   gap: 12px;
   margin-bottom: 16px;
   flex-wrap: wrap;
@@ -120,7 +120,6 @@ select, input[type="text"] {
   outline: none;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   font-size: 16px;
-  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .user-box {
@@ -131,7 +130,6 @@ select, input[type="text"] {
 
 .user-box input {
   flex: 1;
-  padding: 6px;
   border-radius: 4px;
   font-size: 16px;
   border: none;
@@ -209,6 +207,7 @@ input:focus, select:focus {
 
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: 6px;              /* controls spacing naturally */
   align-self: start;
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
@@ -259,12 +258,27 @@ input:focus, select:focus {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 4px;
+  line-height: 1.2;
+
+  padding-right: 48px;      /* space for logo */
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;    /* ✅ max 2 lines only */
+  line-clamp: 2;
+  overflow: hidden;
 }
 
 .player-meta {
-  font-size: 24px;
+  font-size: 18px;              /* 24px is too large for meta */
   color: var(--text-muted);
   margin-bottom: 0;
+  align-items: center;
+  gap: 6px;
+
+  white-space: nowrap;          /* 🚫 no wrapping */
+  overflow: hidden;
+  text-overflow: ellipsis;      /* … when too long */
 }
 
 .player-footer {
@@ -301,6 +315,16 @@ input:focus, select:focus {
   transform: translateY(0);
 }
 
+span.role {
+  font-size: 20px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #fff;
+}.squad.readonly {
+    border: 2px solid var(--accent-orange);
+}
+
 /* =====================================================
    TABLES
 ===================================================== */
@@ -308,7 +332,7 @@ input:focus, select:focus {
   width: 100%;
   white-space: nowrap;
   border-collapse: collapse;
-  font-size: 18px;
+  font-size: 24px;
 }
 
 .squad-table th,
@@ -370,6 +394,7 @@ tr:hover {
 
 .instructions.collapsed .instructions-list {
   display: none;
+  transition: opacity 0.25s ease;
 }
 
 .instructions-list,
@@ -396,12 +421,47 @@ tr:hover {
    VALIDATION
 ===================================================== */
 .validation {
+  margin-bottom: 10px;
   padding: 10px;
   font-size: 20px;
+  border: 2px solid var(--accent-orange);
+}
+
+.validation {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;              /* row | column gap */
+
+  font-size: 20px;
+  line-height: 0.01;
+}
+
+.validation > div,
+.validation > p,
+.validation {
+  align-items: flex-start;
+  gap: 6px;
+
+  white-space: normal;
+  word-break: break-word;
+}
+
+.validation-item.ok {
+  color: var(--success);
+}
+
+.validation-item.error {
+  color: var(--danger);
 }
 
 .ok { color: #4ade80; }
 .err { color: #f87171; }
+
+@media (max-width: 480px) {
+  .validation-panel {
+    grid-template-columns: 1fr;
+  }
+}
 
 /* =====================================================
    BUTTON SYSTEM
@@ -415,6 +475,7 @@ tr:hover {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  justify-content: center;
   box-shadow: 0 6px 14px rgba(0,0,0,0.12);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
@@ -561,7 +622,7 @@ tr:hover {
   width: 50px;
   height: 50px;
   border: 4px solid rgba(255,255,255,0.2);
-  border-top: 4px solid #1e88e5;
+  border-top: 4px solid var(--accent-orange);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
@@ -572,7 +633,7 @@ tr:hover {
 }
 
 #overlay p {
-  color: white;
+  color: var(--accent-orange);
   font-weight: 600;
   font-size: 24px;
   text-align: center;
@@ -623,3 +684,40 @@ tr:hover {
   .side-panel { order: -1; }
   button { padding: 10px; }
 }
+
+/* Hide native radio */
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #6b6bff;
+  border-radius: 50%;
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  margin-right: 6px;
+  transition: 0.2s ease;
+}
+
+/* Inner dot */
+input[type="radio"]::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: scale(0);
+  background: #6b6bff;
+  transition: transform 0.2s ease;
+}
+
+/* Checked state */
+input[type="radio"]:checked::before {
+  transform: scale(1);
+}
+
+/* Hover */
+input[type="radio"]:hover {
+  border-color: #4f46e5;
+}
+
