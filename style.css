@@ -25,9 +25,8 @@
 ===================================================== */
 body {
   font-family: 'Teko', 'Oswald', 'Arial Narrow', sans-serif;
-  font-size: 28px;
-  font-weight: 200;
-  line-height: 1.6;
+  font-size: 24px;
+  line-height: 1.4;
   color: var(--text-primary);
   background:
     linear-gradient(135deg, rgba(255,159,10,0.08), transparent 40%),
@@ -55,8 +54,7 @@ h3 { font-size: 32px; text-align: center; color: var(--accent-orange);}
 .highlight { color: var(--accent-orange); }
 .muted {
   color: var(--text-muted);
-  font-size: 20px;
-  margin-bottom: 6px;
+  font-size: 24px;
 }
 
 /* =====================================================
@@ -100,6 +98,7 @@ h3 { font-size: 32px; text-align: center; color: var(--accent-orange);}
 }
 
 .toolbar {
+  display: -webkit-flex;
   display: flex;
   gap: 12px;
   margin-bottom: 16px;
@@ -349,7 +348,7 @@ span.role {
 .squad-table th,
 .squad-table td {
   border: 2px solid rgba(255,255,255,0.1);
-  padding: 8px;
+  padding: 2px;
   text-align: center;
   vertical-align: middle;
 }
@@ -358,6 +357,7 @@ span.role {
   background: rgba(255,255,255,0.08);
   color: var(--text-primary);
   font-weight: 600;
+  padding: 4px;
 }
 
 tr:hover { 
@@ -369,7 +369,7 @@ tr:hover {
 
 .squad-table tr:hover {
   background: rgba(255, 199, 71, 0.1);
-  transform: translateX(4px);
+  transform: translateX(2px);
 }
 
 .squad-table td:nth-child(2) {
@@ -401,8 +401,8 @@ tr:hover {
 }
 
 .instructions-header {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 600;
   display: flex;
   justify-content: space-between;
   cursor: pointer;
@@ -416,14 +416,11 @@ tr:hover {
 
 .instructions-list,
 .sub-rules {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  list-style: disc;
 }
 
 .instructions-list > li {
-  margin-bottom: 10px;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .sub-rules li {
@@ -588,14 +585,13 @@ tr:hover {
 
 #previewList {
   flex: 1;                       /* takes remaining space */
+  overflow-x: hidden;            /* hide horizontal scrollbar */
   overflow-y: auto;              /* scroll instead of pushing buttons */
-  margin: 10px 0;
 }
 
 #previewModal {
   box-sizing: border-box;
   max-width: 100%;
-  overflow-x: hidden;  /* hides horizontal scrollbar */
 }
 
 #previewModal table.squad-table {

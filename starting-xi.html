@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>T20WC 2026 – Pick Starting XI</title>
+
+  <!-- Global Theme -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="starting-xi.css">
+
+  <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- =====================================================
+  HEADER
+===================================================== -->
+<header class="app-header">
+  <img src="logos/BFL.png" class="logo left">
+  <h1>T20WC 2026 – Pick Starting XI</h1>
+  <img src="logos/T20WC.png" class="logo right">
+</header>
+
+<!-- =====================================================
+  LOCK / TIMER
+===================================================== -->
+<div id="lockPanel" class="floating-timer">
+  <p id="countdownText"></p>
+</div>
+
+<!-- =====================================================
+  TOOLBAR (Back + User)
+===================================================== -->
+<div class="toolbar">
+  <div class="toolbar-actions toolbar-split">
+    
+    <div class="toolbar-left">
+      <button class="btn btn-warning back-btn" onclick="goBackToSquad()">
+        ⬅ Back to Squad
+      </button>
+    </div>
+    <button type="button" class="btn btn-warning back-btn" onclick="autoPickXI()">
+    🤖 Auto Pick XI
+    </button>
+
+    <div class="toolbar-right muted">
+      Logged in as: <strong><span id="displayUserName"></span></strong></>
+    </div>
+
+  </div>
+</div>
+
+<!-- =====================================================
+  APP ROOT
+===================================================== -->
+<div id="appRoot">
+
+  <!-- =====================================================
+    INSTRUCTIONS
+  ===================================================== -->
+<div class="instructions" id="instructionsBox">
+  <div class="instructions-header" onclick="toggleInstructions()">
+    📘 Instructions
+    <span id="instructionsToggle">➕</span>
+  </div>
+
+  <ul class="instructions-list" id="instructionsContent">
+    <li>
+      <strong>Select exactly 11 players</strong> from your submitted squad
+    </li>
+    <li>
+      Credits limit: <b>100</b>
+      <span class="muted">(Advantage Holders may exceed)</span>
+    </li>
+    <li>
+      Captain & Vice-Captain are <b>auto-included</b>
+    </li>
+    <li>
+      Drag & drop to arrange playing order
+    </li>
+  </ul>
+</div>
+
+<div id="toast" class="toast"></div>
+
+  <!-- =====================================================
+    MAIN GRID (3 COLUMNS)
+  ===================================================== -->
+  <div class="container">
+
+    <!-- COLUMN 1: SUBMITTED SQUAD -->
+    <div class="players-section">
+      <h3>Your Submitted Squad (15)</h3>
+      <div class="players" id="submittedPlayerList">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+
+    <!-- COLUMN 2: STARTING XI -->
+    <div class="side-panel">
+      <div class="squad">
+        <h3>Your Starting XI</h3>
+
+        <p>
+          Selected:
+          <span id="xiCount">0</span> / 11
+        </p>
+
+        <p>
+          Total Credits:
+          <span id="xiCredits">0</span> / 100
+        </p>
+
+        <!-- VALIDATION -->
+        <div class="validation" id="xiValidationPanel"></div>
+
+        <!-- XI TABLE -->
+        <table id="xiTable" class="squad-table draggable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Player</th>
+              <th>Role</th>
+              <th>Credits</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <!-- ACTIONS -->
+        <div class="toolbar-actions">
+          <button class="btn btn-danger" onclick="clearStartingXI()">
+            Clear XI
+          </button>
+
+          <button
+            id="submitXI"
+            class="btn btn-success"
+            onclick="submitStartingXI()"
+            disabled>
+            🔒 Submit Starting XI
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMN 3: LAST SUBMITTED XI -->
+    <div class="side-panel">
+      <div class="squad readonly">
+        <h3>Last Submitted Starting XI</h3>
+        <p id="lastXIMeta" class="muted"></p>
+        <table id="lastXITable" class="squad-table"></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- =====================================================
+  OVERLAY
+===================================================== -->
+<div id="overlay" class="overlay" style="display:none;">
+  <div class="spinner"></div>
+  <p>Submitting Starting XI…</p>
+</div>
+
+<!-- =====================================================
+  SCRIPTS
+===================================================== -->
+<script src="players.js"></script>
+<script src="starting-xi.js"></script>
+
+</body>
+</html>

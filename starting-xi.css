@@ -1,0 +1,303 @@
+/* =====================================================
+   STARTING XI – PAGE SPECIFIC STYLES
+   Depends on style.css (theme + base components)
+===================================================== */
+
+/* =====================================================
+   ROOT LAYOUT
+===================================================== */
+
+#appRoot {
+  padding: 18px;
+}
+
+.container {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+/* =====================================================
+   LEFT: SUBMITTED SQUAD (15 PLAYERS)
+===================================================== */
+
+.players-section {
+  background: linear-gradient(160deg, var(--bg-panel), var(--bg-secondary));
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+
+.players-section h3 {
+  margin-bottom: 12px;
+}
+
+/* 15 cards → equal flexible grid */
+#submittedPlayerList {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Player card overrides for Starting XI page */
+.player-card {
+  cursor: pointer;
+  min-height: 96px;
+}
+
+.player-card:hover {
+  transform: translateY(-3px) scale(1.03);
+}
+
+.player-card {
+  transform: scale(1);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    opacity 0.25s ease;
+}
+
+.player-card.selected {
+  transform: scale(0.97);
+  box-shadow: 0 0 0 2px var(--accent-color);
+}
+
+.player-card .player-btn {
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.player-card.selected .player-btn {
+  transform: scale(0.95);
+}
+
+.player-card.just-selected {
+  animation: selectPulse 0.25s ease;
+}
+
+@keyframes selectPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(0.94); }
+  100% { transform: scale(0.97); }
+}
+
+/* =========================
+   C / VC GLOW EFFECTS
+========================= */
+
+/* Captain – Gold glow */
+.player-card.captain {
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.9);
+  border: 2px solid gold;
+  animation: captainGlow 1.8s infinite alternate;
+}
+
+/* Vice Captain – Blue glow */
+.player-card.vice-captain {
+  box-shadow: 0 0 12px rgba(0, 180, 255, 0.9);
+  border: 2px solid #00b4ff;
+  animation: viceCaptainGlow 1.8s infinite alternate;
+}
+
+/* Table row glow */
+tr.captain-row {
+  background: rgba(255, 215, 0, 0.12);
+  animation: captainGlow 1.8s infinite alternate;
+}
+
+tr.vice-captain-row {
+  background: rgba(0, 180, 255, 0.12);
+  animation: viceCaptainGlow 1.8s infinite alternate;
+}
+
+@keyframes captainGlow {
+  from {
+    box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+  }
+  to {
+    box-shadow: 0 0 8px rgba(255, 215, 0, 1);
+  }
+}
+
+@keyframes viceCaptainGlow {
+  from {
+    box-shadow: 0 0 4px rgba(0, 180, 255, 0.5);
+  }
+  to {
+    box-shadow: 0 0 8px rgba(0, 180, 255, 1);
+  }
+}
+
+/* =====================================================
+   RIGHT: SIDE PANEL (XI + LAST XI)
+===================================================== */
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* User info box */
+.user-box.readonly {
+  border: 2px dashed rgba(255,255,255,0.25);
+  padding: 10px;
+  border-radius: 12px;
+}
+
+/* =====================================================
+   STARTING XI PANEL
+===================================================== */
+
+.squad {
+  position: relative;
+}
+
+/* =====================================================
+   VALIDATION PANEL (2 COLUMNS)
+===================================================== */
+#xiValidationPanel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.validation-row {
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.validation-row.ok {
+  color: #2ecc71;
+}
+
+.validation-row.fail {
+  color: #e74c3c;
+}
+
+/* =====================================================
+   DRAGGABLE XI TABLE
+===================================================== */
+
+#xiTable {
+  margin-top: 10px;
+  font-size: 22px;
+}
+
+#xiTable tbody tr {
+  cursor: grab;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+
+#xiTable tbody tr:active {
+  cursor: grabbing;
+}
+
+#xiTable tbody tr:hover {
+  background: rgba(255, 179, 71, 0.15);
+  transform: translateX(4px);
+}
+
+/* Visual cue while dragging */
+#xiTable tbody tr.dragging {
+  opacity: 0.6;
+  transform: scale(0.98);
+}
+
+/* Remove button */
+#xiTable button {
+  border: none;
+  background: transparent;
+  color: #ff6b6b;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+#xiTable button:hover {
+  transform: scale(1.2);
+}
+
+/* =====================================================
+   ACTION BUTTONS
+===================================================== */
+
+.toolbar-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.toolbar-split {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toolbar-left,
+.toolbar-right {
+  align-items: center;
+}
+
+/* =====================================================
+   LAST SUBMITTED XI
+===================================================== */
+
+#lastXITable {
+  margin-top: 8px;
+}
+
+#lastXIMeta {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+/* =====================================================
+   NAV BAR
+===================================================== */
+
+.nav-bar {
+  margin: 10px 0 18px;
+}
+
+.back-btn {
+  font-size: 16px;
+}
+
+/* =====================================================
+   SUBMIT OVERLAY
+===================================================== */
+
+#overlay {
+  backdrop-filter: blur(4px);
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 1100px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  #submittedPlayerList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  #submittedPlayerList {
+    grid-template-columns: 1fr;
+  }
+
+  #xiValidationPanel {
+    grid-template-columns: 1fr;
+  }
+}

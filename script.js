@@ -1,8 +1,8 @@
+const API_URL = "https://script.google.com/macros/s/AKfycbxuoSw52SiippXn11oTQpNTGOm-vYe6GwSDE2jA6rNDRIJwOgZpmUGMrZ0BjWyaV-jU/exec";
 // === SUBMISSION LOCK CONFIG ===
 const SUBMISSION_DEADLINE = new Date("2026-02-06T18:00:00"); // change later
 let submissionLocked = false;
 let isSubmitting = false;
-let squadSubmitted = false;  // <-- Track if squad has been submitted
 
 let squad = [];
 let usedCredits = 0;
@@ -12,7 +12,6 @@ const MAX_CREDITS = 150;
 let captainId = null;
 let viceCaptainId = null;
 const validationPanel = document.getElementById("validationPanel");
-
 const playerList = document.getElementById("playerList");
 const squadList = document.getElementById("squadList");
 const creditsUsedEl = document.getElementById("creditsUsed");
@@ -24,6 +23,7 @@ const sortCredits = document.getElementById("sortCredits");
 const userNameInput = document.getElementById("userName");
 const statusEl = document.getElementById("status");
 const submitBtn = document.getElementById("submitBtn");
+const startingXiBtn = document.getElementById("startingXiBtn");
 
 /* Save username */
 function saveUser() {
@@ -37,12 +37,18 @@ function saveUser() {
 window.onload = () => {
   const saved = localStorage.getItem("fantasy_user");
   if (saved) userNameInput.value = saved;
+
   populateTeamFilter();
   applyFilters();
-  renderLastSubmittedSquad();
   renderSquad();
+  renderLastSubmittedSquad();
+  updateRuleHighlights();
   updateActionButtons();
+
+  // ✅ LAST — async, visual-only
+  checkSquadExistsFromBackend();
 };
+
 
 setInterval(checkSubmissionLock, 1000);
 
@@ -184,8 +190,6 @@ rows.forEach(row => requestAnimationFrame(() => row.classList.add("show")));
 
 /* Add player with category & credit limits */
 function addPlayer(id) {
-  // Reset submission flag if user starts building a new squad
-  if (squadSubmitted) squadSubmitted = false;
 
   if (squad.length >= MAX_PLAYERS) { showToast("Max 15 players"); return; }
   const p = players.find(x => x.id === id);
@@ -266,14 +270,23 @@ submitBtn.disabled = true;
 
 const formData = new URLSearchParams();
 formData.append("payload", JSON.stringify({
+  type: "SQUAD",                 // 🔥 REQUIRED BY BACKEND
   user,
   captainId,
   viceCaptainId,
-  squad,
-  totalCredits: usedCredits
+  totalCredits: usedCredits,
+  squad: squad.map(p => ({
+    id: p.id,
+    name: p.name,
+    category: p.category,
+    credits: p.credits,
+    team: p.team
+  }))
 }));
 
-fetch("https://script.google.com/macros/s/AKfycbw4j6WsC2yHE6qz4Bs8F3cfO7cLN0Qcc0tnl_pJo4gHFUys6V4mPUXN2lk-drdi2Hk/exec", {
+console.log("Submitting SQUAD payload:", JSON.parse(formData.get("payload")));
+
+fetch(API_URL, {
   method: "POST",
   body: formData
 })
@@ -294,11 +307,15 @@ localStorage.setItem("last_submission", JSON.stringify({
   submittedAt: new Date().toISOString()
 }));
 
-// Mark squad as submitted
-squadSubmitted = true;
 renderLastSubmittedSquad();
 resetCycle(true);  
 updateActionButtons();
+checkSquadExistsFromBackend();
+
+// Show Starting XI button
+if (startingXiBtn) {
+  startingXiBtn.style.display = "inline-block";
+}
 })
 
 .catch(err => {
@@ -320,9 +337,10 @@ function resetCycle(fromSubmit = false, silent = false) {
   captainId = null;
   viceCaptainId = null;
 
-  // After a submission, Clear should stay disabled
-  if (fromSubmit) {
-    squadSubmitted = true;
+  if (!fromSubmit) {
+    if (startingXiBtn) {
+    startingXiBtn.style.display = "none";
+    }
   }
 
   if (!silent) {
@@ -508,7 +526,7 @@ function autoPick() {
 }
 
 function clearSquad() {
-  if(confirm("Are you sure you want to clear your squad?")) {
+  if (confirm("Are you sure you want to clear your squad?")) {
     resetCycle();
   }
 }
@@ -653,13 +671,13 @@ function renderLastSubmittedSquad() {
 }
 
 function updateActionButtons() {
-  // Submit: only when exactly 15 players AND squad not submitted
-  submitBtn.disabled = squad.length !== MAX_PLAYERS || squadSubmitted;
+  // Submit enabled only when exactly 15 players
+  submitBtn.disabled = squad.length !== MAX_PLAYERS;
 
-  // Clear: only when squad not empty AND not submitted
+  // Clear enabled when squad has at least 1 player
   const clearBtn = document.getElementById("clearBtn");
   if (clearBtn) {
-    clearBtn.disabled = squad.length === 0 || squadSubmitted;
+    clearBtn.disabled = squad.length === 0;
   }
 }
 
@@ -705,4 +723,40 @@ function renderEmptySquadState() {
   validationPanel.innerHTML =
     `<p class="ok">➕ Add players to start building your squad</p>`;
   submitBtn.disabled = true;
+}
+
+function goToStartingXI() {
+  window.location.href = "starting-xi.html";
+}
+
+async function checkSquadExistsFromBackend() {
+  const user = localStorage.getItem("fantasy_user");
+  const btn = document.getElementById("startingXiBtn");
+  if (!btn) return;
+
+  btn.style.display = "none"; // default
+
+  if (!user) return;
+
+  try {
+    const res = await fetch(
+      `${API_URL}?action=GET_SQUAD&user=${encodeURIComponent(user)}`
+    );
+    const data = await res.json();
+
+    if (data.status === "success" && data.squad?.length === 15) {
+      btn.style.display = "inline-block";
+
+      // cache for UI only
+      localStorage.setItem("last_submission", JSON.stringify({
+        squad: data.squad,
+        captainId: data.captainId,
+        viceCaptainId: data.viceCaptainId,
+        totalCredits: data.totalCredits,
+        submittedAt: new Date().toISOString()
+      }));
+    }
+  } catch (err) {
+    console.warn("Squad fetch failed", err);
+  }
 }
