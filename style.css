@@ -171,6 +171,18 @@ input:focus, select:focus {
 .logo.left { margin-right: auto; }
 .logo.right { margin-left: auto; }
 
+.logo {
+  background-color: var(--text-primary);
+  outline: 2px solid rgba(255, 255, 255, 0.1);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.logo:hover {
+  outline-color: var(--accent-orange);
+  box-shadow: 0 0 12px rgba(255, 179, 71, 0.5);
+  transition: all 0.3s ease;
+}
+
 .floating-timer { 
   position: sticky; 
   top: 45px; 
@@ -245,7 +257,7 @@ input:focus, select:focus {
   cursor: not-allowed;
 }
 
-.player-logo {
+.team-logo {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -330,7 +342,6 @@ span.role {
 ===================================================== */
 .squad-table {
   width: 100%;
-  white-space: nowrap;
   border-collapse: collapse;
   font-size: 24px;
 }
@@ -359,6 +370,12 @@ tr:hover {
 .squad-table tr:hover {
   background: rgba(255, 199, 71, 0.1);
   transform: translateX(4px);
+}
+
+.squad-table td:nth-child(2) {
+  white-space: normal;        /* allow wrapping */
+  word-break: break-word;     /* long names */
+  line-height: 1.2;
 }
 
 .squad-table th:nth-child(1),

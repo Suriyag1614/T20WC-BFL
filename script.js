@@ -96,7 +96,7 @@ function renderPlayers(data) {
       <div>
         <div class="player-name">${p.name}</div>
         <div class="player-meta">
-          <div><img src="logos/${p.team}.png" class="player-logo"></div>
+          <div><img src="logos/${p.team}.png" class="team-logo"></div>
           ${p.category} | ${p.team} | Group ${p.group}<br>
         </div>
       </div>

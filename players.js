@@ -1,5 +1,5 @@
 const players = [
-  { id: "P001", name: "Virat Kohli", category: "Batter", team: "IND", group: "A", credits: 20 },
+  { id: "P001", name: "Virat Kohli", category: "Batter", team: "IND", group: "A", credits: 10 },
   { id: "P002", name: "Rohit Sharma", category: "Batter", team: "IND", group: "A", credits: 9 },
   { id: "P003", name: "Jasprit Bumrah", category: "Bowler", team: "IND", group: "A", credits: 9 },
   { id: "P004", name: "Hardik Pandya", category: "All-Rounder", team: "IND", group: "A", credits: 9.5 },
@@ -12,7 +12,7 @@ const players = [
   { id: "P011", name: "Babar Azam", category: "Batter", team: "PAK", group: "C", credits: 10 },
   { id: "P012", name: "Shaheen Afridi", category: "Bowler", team: "PAK", group: "C", credits: 9 },
   { id: "P013", name: "Shadab Khan", category: "All-Rounder", team: "PAK", group: "C", credits: 9 },
-  { id: "P014", name: "Mohammad Rizwan", category: "Wicket-Keeper", team: "PAK", group: "C", credits: 8.5 },
+  { id: "P014", name: "Mohammad Rizwan Ahmed Khan", category: "Wicket-Keeper", team: "PAK", group: "C", credits: 8.5 },
   { id: "P015", name: "Fakhar Zaman", category: "Batter", team: "PAK", group: "C", credits: 9 },
   { id: "P016", name: "David Warner", category: "Batter", team: "AUS", group: "D", credits: 9.5 },
   { id: "P017", name: "Pat Cummins", category: "Bowler", team: "AUS", group: "D", credits: 10 },
