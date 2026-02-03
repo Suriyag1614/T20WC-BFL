@@ -55,7 +55,7 @@ window.onload = () => {
   applyFilters();
 
   rehydrateUserState();   // 🔥 unified logic
-
+  
   hideOverlay();
 };
 
@@ -112,7 +112,7 @@ function renderPlayers(data) {
       <div>
         <div class="player-name">${p.name}</div>
         <div class="player-meta">
-          <div><img src="logos/${p.team}.png" class="team-logo"></div>
+          <div><img src="https://images.icc-cricket.com/image/upload/t_q-good/prd/assets/flags/${p.team}.png" class="team-logo"></div>
           ${p.category} | ${p.team} | Group ${p.group}<br>
         </div>
       </div>
@@ -881,7 +881,7 @@ function rehydrateUserState() {
     renderLastSubmittedSquad();
   } else {
     // Clear last submission UI if none
-    document.getElementById("lastSubmittedMeta").textContent = "";
+    document.getElementById("lastSubmittedMeta").textContent = "No Squad Submitted Yet.";
     document.getElementById("lastSquadTable").innerHTML = "";
   }
 

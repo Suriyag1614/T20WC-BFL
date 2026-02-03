@@ -70,8 +70,12 @@ async function fetchSubmittedSquad() {
       throw new Error(data.message || "Backend error");
     }
 
-    if (!Array.isArray(data.squad)) {
-      throw new Error("Squad data is not an array");
+    if (!Array.isArray(data.squad) || data.squad.length === 0) {
+      showToast("⚠️ No submitted squad found. Please submit your squad first.");
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 2500);
+      return;
     }
 
     submittedSquad = data.squad.map(p => ({
@@ -111,7 +115,15 @@ async function fetchLastSubmittedXI() {
     );
     const data = await res.json();
 
-    if (data.status !== "success") return;
+    if (data.status !== "success" || !Array.isArray(data.startingXI) || data.startingXI.length === 0) {
+      showToast("ℹ️ No previous Starting XI submission found");
+      document.getElementById("lastXITable").innerHTML = `
+        <tr>
+          <td colspan="4" class="muted">No Starting XI Submitted Yet.</td>
+        </tr>
+      `;
+      return;
+    }
 
     const table = document.getElementById("lastXITable");
 
@@ -172,7 +184,7 @@ function renderSubmittedPlayers() {
         <div class="player-name">${player.name}</div>
         <div class="player-meta">
           <img
-            src="logos/${player.team}.png"
+            src="https://images.icc-cricket.com/image/upload/t_q-good/prd/assets/flags/${player.team}.png"
             class="team-logo"
             onerror="this.style.display='none'"
           >
@@ -478,7 +490,7 @@ function showToast(msg) {
   toast.textContent = msg;
   toast.classList.add("show");
 
-  setTimeout(() => toast.classList.remove("show"), 2500);
+  setTimeout(() => toast.classList.remove("show"), 5000);
 }
 
 function showLoader(text = "Loading...") {

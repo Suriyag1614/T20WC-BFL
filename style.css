@@ -49,12 +49,13 @@ h1, h2, h3,
 
 h1 { font-size: 48px; text-align: center; }
 h2 { font-size: 40px; text-align: center; }
-h3 { font-size: 32px; margin-top: 4px; text-align:center; color: var(--accent-orange);}
+h3 { font-size: 32px; word-break: break-word; margin-top: 4px; text-align:center; color: var(--accent-orange);}
 
 .highlight { color: var(--accent-orange); }
 .muted {
   color: var(--text-muted);
   font-size: 24px;
+  text-transform: capitalize;
 }
 
 /* =====================================================
@@ -192,7 +193,8 @@ input:focus, select:focus {
   transform: translateX(-50%); 
   font-size: 20px; 
   font-weight: 500; 
-  width: fit-content; 
+  width: fit-content;
+  color: var(--accent-orange); 
   z-index: 1000; }
 
   .floating-timer {
@@ -247,7 +249,7 @@ input:focus, select:focus {
   filter: grayscale(0.8);
   transition: all 0.3s ease;
   transform: scale(0.98);
-  background: #f5f5f5;
+  background: var(--text-muted);
   opacity: 0.6;
 }
 
@@ -257,7 +259,7 @@ input:focus, select:focus {
 }
 
 .team-logo {
-  position: absolute;
+  position: fixed;
   top: 8px;
   right: 8px;
   width: 36px;
@@ -267,7 +269,6 @@ input:focus, select:focus {
 
 .player-name {
   font-size: 24px;
-  font-weight: bold;
   margin-bottom: 4px;
   line-height: 1.2;
 
@@ -307,7 +308,7 @@ input:focus, select:focus {
 
 .player-footer button.add {
   background: #2e7d32;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .player-footer button.disabled {
@@ -355,7 +356,7 @@ span.role {
 
 .squad-table th {
   background: rgba(255,255,255,0.08);
-  color: var(--text-primary);
+  color: var(--accent-pink);
   font-weight: 600;
   padding: 4px;
 }
@@ -620,7 +621,7 @@ tr:hover {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  z-index: 6000;              /* above everything */
+  z-index: 5000;              /* above everything */
   opacity: 0;
   backdrop-filter: blur(2px);
   background: rgba(0, 0, 0, 0.35);
@@ -767,8 +768,16 @@ input[type="radio"]:hover {
   gap: 14px;
 }
 
+.footer-logos {
+  display: flex;
+  align-items: center;
+  gap: 12px;          /* space between logos */
+  justify-content: center; /* optional: center them */
+}
+
 .footer-logo {
   height: 42px;
+  width: auto;
   opacity: 0.95;
 }
 
