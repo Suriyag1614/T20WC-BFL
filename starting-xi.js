@@ -252,8 +252,11 @@ function togglePlayer(playerId) {
     return;
   }
 
-  // Add
-  if (selectedXI.length >= 11) return;
+  // Add (LIMIT CHECK)
+  if (selectedXI.length >= 11) {
+    showToast("⚠️ Maximum 11 players allowed in Starting XI");
+    return;
+  }
 
   const player = submittedSquad.find(p => p.id === playerId);
   selectedXI.push({ ...player });

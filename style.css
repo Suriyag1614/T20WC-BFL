@@ -786,3 +786,43 @@ input[type="radio"]:hover {
   color: var(--text-muted);
   margin-top: 2px;
 }
+
+/* =====================================
+   SIDE PATTERNS
+===================================== */
+.side-pattern {
+  position: fixed;
+  top: 0;
+  height: 100vh;
+  width: 100px;          /* adjust */
+  z-index: -1;
+  pointer-events: none; /* click-through */
+  opacity: 0.85;
+}
+
+.side-pattern.left {
+  left: 0;
+  background: url("images/leftSidePattern") no-repeat center left;
+  background-size: contain;
+  background-position: left 70px;
+}
+
+.side-pattern.right {
+  right: 0;
+  background: url("https://images.icc-cricket.com/image/private/t_q-best/v1761236552/prd/assets/tournaments/mens-t20-world-cup-2026/newwww-mt20wc-2026-top-right.svg") no-repeat center right;
+  background-size: contain;
+  background-position: right 70px;
+}
+
+@media (max-width: 900px) {
+  .side-pattern {
+    width: 70px;
+    opacity: 0.4;
+  }
+}
+
+@media (max-width: 600px) {
+  .side-pattern {
+    display: none;
+  }
+}

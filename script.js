@@ -254,30 +254,30 @@ function submitSquad(formPreview = false) {
     showToast("⛔ Submissions are closed");
     return;
   }
-  
-  if (isSubmitting) return;
-  isSubmitting = true;
-  
+    
   const user = getActiveUserOrBlock();
+  if(!user) return;
 
   if (!user) {
     showToast("Save your name first");
     return;
   }
-
+  
   if (squad.length !== MAX_PLAYERS) {
     showToast("Select exactly 15 players");
     return;
   }
-
+  
   if (!captainId || !viceCaptainId) {
     showToast("Select Captain and Vice-Captain");
     return;
   }
+  
+  if (isSubmitting) return;
+  isSubmitting = true;
 
 statusEl.textContent = "Submitting...";
-disablePage(true);
-showOverlay(text="Submitting Your Squad...");
+showOverlay("Submitting Your Squad...");
 submitBtn.disabled = true;
 
 const formData = new URLSearchParams();
@@ -385,6 +385,7 @@ function setCaptain(id) {
   }
   captainId = id;
   renderSquad();
+  updateActionButtons();
 }
 
 function setViceCaptain(id) {
@@ -394,6 +395,7 @@ function setViceCaptain(id) {
   }
   viceCaptainId = id;
   renderSquad();
+  updateActionButtons();
 }
 
 function validateSquad() {
@@ -665,7 +667,12 @@ function renderLastSubmittedSquad() {
 
 function updateActionButtons() {
   // Submit enabled only when exactly 15 players
-  submitBtn.disabled = squad.length !== MAX_PLAYERS || usedCredits > MAX_CREDITS;
+
+  submitBtn.disabled =
+  squad.length !== MAX_PLAYERS ||
+  usedCredits > MAX_CREDITS ||
+  !captainId ||
+  !viceCaptainId;
 
   // Clear enabled when squad has at least 1 player
   const clearBtn = document.getElementById("clearBtn");

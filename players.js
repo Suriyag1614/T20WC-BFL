@@ -13,7 +13,7 @@ const players = [
     "category": "All-Rounder",
     "team": "IND",
     "group": "A",
-    "credits": 12
+    "credits": 11
   },
   {
     "id": "P003",
@@ -1821,7 +1821,7 @@ const players = [
     "category": "Batter",
     "team": "SA",
     "group": "D",
-    "credits": 12
+    "credits": 11
   },
   {
     "id": "P229",
@@ -1933,7 +1933,7 @@ const players = [
     "category": "Batter",
     "team": "NZ",
     "group": "D",
-    "credits": 11
+    "credits": 10
   },
   {
     "id": "P243",
@@ -1965,7 +1965,7 @@ const players = [
     "category": "Bowler",
     "team": "NZ",
     "group": "D",
-    "credits": 11.5
+    "credits": 10
   },
   {
     "id": "P247",
@@ -1981,7 +1981,7 @@ const players = [
     "category": "Bowler",
     "team": "NZ",
     "group": "D",
-    "credits": 10
+    "credits": 9
   },
   {
     "id": "P249",
@@ -1989,7 +1989,7 @@ const players = [
     "category": "Bowler",
     "team": "NZ",
     "group": "D",
-    "credits": 9
+    "credits": 8.5
   },
   {
     "id": "P250",
@@ -1997,7 +1997,7 @@ const players = [
     "category": "All-Rounder",
     "team": "NZ",
     "group": "D",
-    "credits": 10
+    "credits": 9
   },
   {
     "id": "P251",
@@ -2013,7 +2013,7 @@ const players = [
     "category": "All-Rounder",
     "team": "NZ",
     "group": "D",
-    "credits": 11
+    "credits": 10.5
   },
   {
     "id": "P253",
@@ -2045,7 +2045,7 @@ const players = [
     "category": "All-Rounder",
     "team": "AFG",
     "group": "D",
-    "credits": 11
+    "credits": 9.5
   },
   {
     "id": "P257",
@@ -2053,7 +2053,7 @@ const players = [
     "category": "Bowler",
     "team": "AFG",
     "group": "D",
-    "credits": 10.5
+    "credits": 9
   },
   {
     "id": "P258",
