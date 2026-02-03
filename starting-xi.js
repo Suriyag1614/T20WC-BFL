@@ -424,45 +424,6 @@ async function submitStartingXI() {
   }
 }
 
-function autoPickXI() {
-  selectedXI = [];
-
-  // Always include C / VC first
-  [captainId, viceCaptainId].forEach(id => {
-    const p = submittedSquad.find(x => x.id === id);
-    if (p) selectedXI.push(p);
-  });
-
-  // Group players by role
-  const byRole = {};
-  submittedSquad.forEach(p => {
-    if (!byRole[p.category]) byRole[p.category] = [];
-    byRole[p.category].push(p);
-  });
-
-  // Pick minimum roles first
-  Object.keys(ROLE_MIN).forEach(role => {
-    const need = ROLE_MIN[role];
-    const existing = selectedXI.filter(p => p.category === role).length;
-
-    byRole[role]
-      ?.filter(p => !selectedXI.some(x => x.id === p.id))
-      .slice(0, need - existing)
-      .forEach(p => selectedXI.push(p));
-  });
-
-  // Fill remaining slots by lowest credits
-  submittedSquad
-    .filter(p => !selectedXI.some(x => x.id === p.id))
-    .sort((a, b) => a.credits - b.credits)
-    .forEach(p => {
-      if (selectedXI.length < 11) selectedXI.push(p);
-    });
-
-  updateUI();
-  showToast("Starting XI auto-picked");
-}
-
 function goBackToSquad() {
   window.location.href = "index.html";
 }

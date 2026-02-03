@@ -453,15 +453,23 @@ function validateSquad() {
     }
   
   // Team-wise validation
-[...new Set(players.map(p => p.team))].forEach(team => {
-  const count = squad.filter(p => p.team === team).length;
-  lines.push(
-    count <= 4
-      ? `<p class="ok">✔ ${team} players: ${count}/4</p>`
-      : `<p class="err">✖ ${team} players: ${count}/4</p>`
-  );
-  if (count > 4) valid = false;
-});
+  [...new Set(squad.map(p => p.team))]
+    .sort((a, b) => {
+      const countB = squad.filter(p => p.team === b).length;
+      const countA = squad.filter(p => p.team === a).length;
+      return countB - countA;
+    })
+    .forEach(team => {
+      const count = squad.filter(p => p.team === team).length;
+
+      lines.push(
+        count <= 4
+          ? `<p class="ok">✔ ${team} players: ${count}/4</p>`
+          : `<p class="err">✖ ${team} players: ${count}/4</p>`
+      );
+
+      if (count > 4) valid = false;
+    });
 
   // Captain / VC
   if (captainId) {
@@ -493,108 +501,6 @@ function addPlayerAuto(p, categoryCount, teamCount, limits) {
   categoryCount[p.category]++;
   teamCount[p.team] = (teamCount[p.team] || 0) + 1;
   return true;
-}
-
-function autoPick() {
-  if (submissionLocked) {
-    showToast("Submissions are locked");
-    return;
-  }
-
-  resetCycle(false, true);
-
-  const MAX_CREDITS = 150;
-  const limits = {
-    "Wicket-Keeper": 2,
-    "Batter": 5,
-    "Bowler": 5,
-    "All-Rounder": 5
-  };
-
-  const categoryCount = {
-    "Wicket-Keeper": 0,
-    "Batter": 0,
-    "Bowler": 0,
-    "All-Rounder": 0
-  };
-
-  const teamCount = {};
-  let usedCredits = 0;
-
-  // Clone players so we can safely sort
-  const pool = [...players];
-
-  // Helper: try add with credit check
-  function tryAdd(player) {
-    if (usedCredits + player.credits > MAX_CREDITS) return false;
-
-    const added = addPlayerAuto(player, categoryCount, teamCount, limits);
-    if (added) {
-      usedCredits += player.credits;
-    }
-    return added;
-  }
-
-  /* =========================
-     STEP 1: Mandatory WK
-  ========================= */
-  pool
-    .filter(p => p.category === "Wicket-Keeper")
-    .sort((a, b) => b.credits - a.credits) // cheaper WK first
-    .some(p => tryAdd(p));
-
-  /* =========================
-     STEP 2: Fill role minimums
-  ========================= */
-  Object.keys(limits).forEach(role => {
-    const min = role === "Wicket-Keeper" ? 1 : 0;
-    while (
-      categoryCount[role] < min &&
-      squad.length < MAX_PLAYERS
-    ) {
-      const candidate = pool
-        .filter(p => p.category === role && !squad.some(s => s.id === p.id))
-        .sort((a, b) => b.credits - a.credits)[0];
-
-      if (!candidate || !tryAdd(candidate)) break;
-    }
-  });
-
-
-  pool
-  .sort((a, b) => b.credits - a.credits)
-  .forEach(p => {
-    if (squad.length >= MAX_PLAYERS) return;
-    tryAdd(p);
-  });
-
-  /* =========================
-     STEP 4: Fallback
-  ========================= */
-  if (squad.length < MAX_PLAYERS) {
-    pool
-      .sort((a, b) => b.credits - a.credits)
-      .forEach(p => {
-        if (squad.length >= MAX_PLAYERS) return;
-        tryAdd(p);
-      });
-  }
-
-  /* =========================
-     STEP 5: Auto C / VC
-  ========================= */
-  if (squad.length >= 2) {
-    const ranked = [...squad].sort((a, b) => b.credits - a.credits);
-    captainId = ranked[0].id;
-    viceCaptainId = ranked[1].id;
-  }
-
-  renderSquad();
-  applyFilters();
-  updateActionButtons();
-  updateRuleHighlights();
-
-  showToast(`Auto-picked squad (${usedCredits}/150 credits)`);
 }
 
 function clearSquad() {
@@ -759,7 +665,7 @@ function renderLastSubmittedSquad() {
 
 function updateActionButtons() {
   // Submit enabled only when exactly 15 players
-  submitBtn.disabled = squad.length !== MAX_PLAYERS;
+  submitBtn.disabled = squad.length !== MAX_PLAYERS || usedCredits > MAX_CREDITS;
 
   // Clear enabled when squad has at least 1 player
   const clearBtn = document.getElementById("clearBtn");
