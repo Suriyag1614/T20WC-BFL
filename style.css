@@ -736,3 +736,44 @@ input[type="radio"]:hover {
   border-color: #4f46e5;
 }
 
+/* =========================
+   FOOTER (ICC STYLE)
+========================= */
+.site-footer {
+  margin-top: 40px;
+  background: linear-gradient(180deg, #0b0a3d, #05042a);
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.footer-divider {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #ffb347,
+    transparent
+  );
+  opacity: 0.6;
+}
+
+.footer-content {
+  padding: 20px 16px 24px;
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.footer-logo {
+  height: 42px;
+  opacity: 0.95;
+}
+
+.footer-copy {
+  font-size: 24px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}

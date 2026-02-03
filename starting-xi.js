@@ -5,7 +5,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbxuoSw52SiippXn11oTQpNT
 
 const normalizeId = id => String(id);
 const CREDIT_LIMIT = 100;
-const CREDIT_OVERRIDE_USERS = ["admin", "Suriya"]; // case-insensitive
+const CREDIT_OVERRIDE_USERS = ["Sure", "Suriya"]; // case-insensitive
 
 const ROLE_MIN = {
   "Wicket-Keeper": 1,
@@ -114,7 +114,20 @@ async function fetchLastSubmittedXI() {
     if (data.status !== "success") return;
 
     const table = document.getElementById("lastXITable");
-    table.innerHTML = "";
+
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Role</th>
+          <th>Credits</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+
+    const tbody = table.querySelector("tbody");
 
     data.startingXI.forEach(p => {
       const row = document.createElement("tr");
@@ -124,7 +137,7 @@ async function fetchLastSubmittedXI() {
         <td>${p.category}</td>
         <td>${p.credits}</td>
       `;
-      table.appendChild(row);
+      tbody.appendChild(row);
     });
 
     document.getElementById("lastXIMeta").textContent =
