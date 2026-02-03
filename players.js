@@ -1,6 +1,3 @@
-// AUTO-GENERATED FILE – DO NOT EDIT
-// Generated from players.txt
-
 const players = [
   {
     "id": "P001",
@@ -2403,5 +2400,3 @@ const players = [
     "credits": 5
   }
 ];
-
-export default players;

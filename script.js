@@ -207,7 +207,7 @@ function addPlayer(id) {
   if (usedCredits + p.credits > MAX_CREDITS) { showToast("Credit limit exceeded"); return; }
 
   const categoryCount = squad.filter(x => x.category === p.category).length;
-  const limits = { "Wicket-Keeper": 2, "Batter": 6, "Bowler": 6, "All-Rounder": 4 };
+  const limits = { "Wicket-Keeper": 2, "Batter": 5, "Bowler": 5, "All-Rounder": 5 };
   if (categoryCount >= limits[p.category]) { showToast(`Max ${limits[p.category]} ${p.category}s allowed`); return; }
 
   const teamCount = squad.filter(x => x.team === p.team).length;
@@ -429,9 +429,9 @@ function validateSquad() {
   // Category validation
   const limits = {
     "Wicket-Keeper": 2,
-    "Batter": 6,
-    "Bowler": 6,
-    "All-Rounder": 4
+    "Batter": 5,
+    "Bowler": 5,
+    "All-Rounder": 5
   };
 
   Object.keys(limits).forEach(cat => {
@@ -506,9 +506,9 @@ function autoPick() {
   const MAX_CREDITS = 150;
   const limits = {
     "Wicket-Keeper": 2,
-    "Batter": 6,
-    "Bowler": 6,
-    "All-Rounder": 4
+    "Batter": 5,
+    "Bowler": 5,
+    "All-Rounder": 5
   };
 
   const categoryCount = {
@@ -540,7 +540,7 @@ function autoPick() {
   ========================= */
   pool
     .filter(p => p.category === "Wicket-Keeper")
-    .sort((a, b) => a.credits - b.credits) // cheaper WK first
+    .sort((a, b) => b.credits - a.credits) // cheaper WK first
     .some(p => tryAdd(p));
 
   /* =========================
@@ -554,34 +554,26 @@ function autoPick() {
     ) {
       const candidate = pool
         .filter(p => p.category === role && !squad.some(s => s.id === p.id))
-        .sort((a, b) => a.credits - b.credits)[0];
+        .sort((a, b) => b.credits - a.credits)[0];
 
       if (!candidate || !tryAdd(candidate)) break;
     }
   });
 
-  /* =========================
-     STEP 3: Smart fill remaining slots
-     (best value first, not highest credit)
-  ========================= */
+
   pool
-    .sort((a, b) => {
-      // value score: prefer mid-credit flexible players
-      const scoreA = a.credits + (limits[a.category] - categoryCount[a.category]) * 5;
-      const scoreB = b.credits + (limits[b.category] - categoryCount[b.category]) * 5;
-      return scoreA - scoreB;
-    })
-    .forEach(p => {
-      if (squad.length >= MAX_PLAYERS) return;
-      tryAdd(p);
-    });
+  .sort((a, b) => b.credits - a.credits)
+  .forEach(p => {
+    if (squad.length >= MAX_PLAYERS) return;
+    tryAdd(p);
+  });
 
   /* =========================
-     STEP 4: Fallback (force fill with cheapest)
+     STEP 4: Fallback
   ========================= */
   if (squad.length < MAX_PLAYERS) {
     pool
-      .sort((a, b) => a.credits - b.credits)
+      .sort((a, b) => b.credits - a.credits)
       .forEach(p => {
         if (squad.length >= MAX_PLAYERS) return;
         tryAdd(p);
