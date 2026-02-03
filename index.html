@@ -182,8 +182,8 @@
     <p><strong>Total Credits:</strong> <span id="previewCredits"></span></p>
 
     <div class="modal-actions">
-      <button class="btn btn-danger btn-block" onclick="closePreview()">Cancel</button>
-      <button class="btn btn-success btn-block" onclick="confirmSubmit()">🔒 Lock & Submit</button>
+      <button type="button" class="btn btn-danger btn-block" onclick="closePreview()">Cancel</button>
+      <button type="button" class="btn btn-success btn-block" onclick="confirmSubmit()">🔒 Lock & Submit</button>
     </div>
   </div>
 </div>
@@ -191,7 +191,7 @@
 <!-- OVERLAY -->
 <div id="overlay">
   <div class="spinner"></div>
-  <p>Submitting Your Squad…</p>
+  <p id="overlayText">Loading…</p>
 </div>
 
 </body>

@@ -74,7 +74,6 @@ async function fetchSubmittedSquad() {
       throw new Error("Squad data is not an array");
     }
 
-    // ✅ Normalize IDs + keep everything safe
     submittedSquad = data.squad.map(p => ({
       id: String(p.id),
       name: p.name,
@@ -92,13 +91,15 @@ async function fetchSubmittedSquad() {
     updateUI();
 
   } catch (err) {
-  console.error("❌ Squad load error FULL:", err, err?.stack);
-  showToast(
-    "Unable to fetch squad submitted data.\n\n" +
-    (err?.message || err)
-  );
-}
+    console.error("❌ Squad load error FULL:", err, err?.stack);
+    showToast(
+      "Unable to fetch squad submitted data.\n\n" +
+      (err?.message || err)
+    );
+  } finally {
+    hideLoader();   // ✅ THIS WAS MISSING
   }
+}
 
 /* =========================
    FETCH LAST SUBMITTED XI
@@ -381,7 +382,6 @@ async function submitStartingXI() {
     }))
   };
 
-  document.getElementById("overlay").style.display = "flex";
   showLoader("Submitting Starting XI…");
   const res = await fetch(API_URL, {
     method: "POST",
@@ -389,11 +389,10 @@ async function submitStartingXI() {
     body: `payload=${encodeURIComponent(JSON.stringify(payload))}`
   });
   hideLoader();
-  document.getElementById("overlay").style.display = "none";
 
   const data = await res.json();
   if (data.status === "success") {
-    showToast("Starting XI submitted successfully!");
+    showToast("✅ Starting XI submitted successfully!, You may close this page now.", 7000);
     fetchLastSubmittedXI();
   } else {
     showToast(data.message || "Submission failed");
@@ -473,16 +472,57 @@ function showLoader(text = "Loading...") {
   const overlay = document.getElementById("overlay");
   if (!overlay) return;
 
-  overlay.style.display = "flex";
-  overlay.querySelector(".spinner-text")?.remove();
+  overlay.classList.add("show");
 
-  const label = document.createElement("div");
-  label.className = "spinner-text";
-  label.textContent = text;
-  overlay.appendChild(label);
+  const p = overlay.querySelector("p");
+  if (p) p.textContent = text;
 }
 
 function hideLoader() {
   const overlay = document.getElementById("overlay");
-  if (overlay) overlay.style.display = "none";
+  if (!overlay) return;
+
+  overlay.classList.remove("show");
 }
+
+/* =========================
+   SUBMISSION TIMER (XI PAGE)
+========================= */
+
+const SUBMISSION_DEADLINE = new Date("2026-02-06T18:00:00");
+let xiSubmissionLocked = false;
+
+function startXITimer() {
+  const countdownEl = document.getElementById("countdownText");
+  if (!countdownEl) return;
+
+  setInterval(() => {
+    const now = new Date();
+    const diff = SUBMISSION_DEADLINE - now;
+
+    if (diff <= 0) {
+      xiSubmissionLocked = true;
+      countdownEl.textContent = "⛔ Submissions Closed";
+      document.body.classList.add("locked");
+      disableXIPage(true);
+      return;
+    }
+
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+
+    countdownEl.textContent =
+      `⏳ Submission closes in ${d}d ${h}h ${m}m ${s}s`;
+  }, 1000);
+}
+
+function disableXIPage(disabled) {
+  const app = document.getElementById("appRoot");
+  if (!app) return;
+  app.style.pointerEvents = disabled ? "none" : "auto";
+  app.style.opacity = disabled ? "0.6" : "1";
+}
+
+document.addEventListener("DOMContentLoaded", startXITimer);

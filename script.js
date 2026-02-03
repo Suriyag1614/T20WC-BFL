@@ -28,32 +28,42 @@ const startingXiBtn = document.getElementById("startingXiBtn");
 /* Save username */
 function saveUser() {
   const name = userNameInput.value.trim();
-  if (!name) { showToast("Enter your name"); return; }
+  if (!name) {
+    showToast("Enter your name");
+    return;
+  }
+
+  const prevUser = localStorage.getItem("fantasy_user");
+
+  if (prevUser && prevUser !== name) {
+    localStorage.removeItem(`last_submission_${prevUser}`);
+    showToast(`User switched to ${name}`);
+  } else {
+    showToast("Name saved!");
+  }
+
   localStorage.setItem("fantasy_user", name);
-  showToast("Name saved!");
+  rehydrateUserState();   // 🔥 THIS IS THE KEY
 }
 
-/* Load user & populate team filter */
+
 window.onload = () => {
   const saved = localStorage.getItem("fantasy_user");
   if (saved) userNameInput.value = saved;
-
+  
   populateTeamFilter();
   applyFilters();
-  renderSquad();
-  renderLastSubmittedSquad();
-  updateRuleHighlights();
-  updateActionButtons();
 
-  // ✅ LAST — async, visual-only
-  checkSquadExistsFromBackend();
+  rehydrateUserState();   // 🔥 unified logic
+
+  hideOverlay();
 };
-
 
 setInterval(checkSubmissionLock, 1000);
 
 /* Populate Teams dropdown */
 function populateTeamFilter() {
+  
   [...new Set(players.map(p => p.team))].forEach(t => {
     const o = document.createElement("option");
     o.value = t; o.textContent = t;
@@ -238,17 +248,18 @@ function removePlayer(index) {
 }
 
 /* Submit squad */
-function submitSquad() {
-
+function submitSquad(formPreview = false) {
+  
   if (submissionLocked) {
-    showToast("Submission closed");
+    showToast("⛔ Submissions are closed");
     return;
   }
   
   if (isSubmitting) return;
   isSubmitting = true;
   
-   const user = localStorage.getItem("fantasy_user");
+  const user = getActiveUserOrBlock();
+
   if (!user) {
     showToast("Save your name first");
     return;
@@ -265,7 +276,8 @@ function submitSquad() {
   }
 
 statusEl.textContent = "Submitting...";
-showOverlay();
+disablePage(true);
+showOverlay(text="Submitting Your Squad...");
 submitBtn.disabled = true;
 
 const formData = new URLSearchParams();
@@ -299,7 +311,11 @@ fetch(API_URL, {
 statusEl.textContent = "Submitted successfully!";
 showToast("✅ Squad submitted!");
 
-localStorage.setItem("last_submission", JSON.stringify({
+if (formPreview) {
+  closePreview();
+}
+
+localStorage.setItem(`last_submission_${user}`, JSON.stringify({
   squad,
   captainId,
   viceCaptainId,
@@ -325,9 +341,14 @@ if (startingXiBtn) {
 })
 .finally(() => {
   hideOverlay();
-  submitBtn.disabled = false;
   isSubmitting = false;
+
+  if (!submissionLocked) {
+    submitBtn.disabled = false;
+    disablePage(false);
+  }
 });
+
 }
 
 /* Reset squad */
@@ -482,6 +503,7 @@ function autoPick() {
 
   resetCycle(false, true);
 
+  const MAX_CREDITS = 150;
   const limits = {
     "Wicket-Keeper": 2,
     "Batter": 6,
@@ -497,21 +519,78 @@ function autoPick() {
   };
 
   const teamCount = {};
+  let usedCredits = 0;
 
-  const sorted = [...players].sort((a, b) => b.credits - a.credits);
+  // Clone players so we can safely sort
+  const pool = [...players];
 
-  // Step 1: Ensure at least 1 WK
-  sorted
+  // Helper: try add with credit check
+  function tryAdd(player) {
+    if (usedCredits + player.credits > MAX_CREDITS) return false;
+
+    const added = addPlayerAuto(player, categoryCount, teamCount, limits);
+    if (added) {
+      usedCredits += player.credits;
+    }
+    return added;
+  }
+
+  /* =========================
+     STEP 1: Mandatory WK
+  ========================= */
+  pool
     .filter(p => p.category === "Wicket-Keeper")
-    .some(p => addPlayerAuto(p, categoryCount, teamCount, limits));
+    .sort((a, b) => a.credits - b.credits) // cheaper WK first
+    .some(p => tryAdd(p));
 
-  // Step 2: Fill remaining slots
-  sorted.forEach(p => {
-    if (squad.length >= MAX_PLAYERS) return;
-    addPlayerAuto(p, categoryCount, teamCount, limits);
+  /* =========================
+     STEP 2: Fill role minimums
+  ========================= */
+  Object.keys(limits).forEach(role => {
+    const min = role === "Wicket-Keeper" ? 1 : 0;
+    while (
+      categoryCount[role] < min &&
+      squad.length < MAX_PLAYERS
+    ) {
+      const candidate = pool
+        .filter(p => p.category === role && !squad.some(s => s.id === p.id))
+        .sort((a, b) => a.credits - b.credits)[0];
+
+      if (!candidate || !tryAdd(candidate)) break;
+    }
   });
 
-  // Step 3: Auto C / VC
+  /* =========================
+     STEP 3: Smart fill remaining slots
+     (best value first, not highest credit)
+  ========================= */
+  pool
+    .sort((a, b) => {
+      // value score: prefer mid-credit flexible players
+      const scoreA = a.credits + (limits[a.category] - categoryCount[a.category]) * 5;
+      const scoreB = b.credits + (limits[b.category] - categoryCount[b.category]) * 5;
+      return scoreA - scoreB;
+    })
+    .forEach(p => {
+      if (squad.length >= MAX_PLAYERS) return;
+      tryAdd(p);
+    });
+
+  /* =========================
+     STEP 4: Fallback (force fill with cheapest)
+  ========================= */
+  if (squad.length < MAX_PLAYERS) {
+    pool
+      .sort((a, b) => a.credits - b.credits)
+      .forEach(p => {
+        if (squad.length >= MAX_PLAYERS) return;
+        tryAdd(p);
+      });
+  }
+
+  /* =========================
+     STEP 5: Auto C / VC
+  ========================= */
   if (squad.length >= 2) {
     const ranked = [...squad].sort((a, b) => b.credits - a.credits);
     captainId = ranked[0].id;
@@ -522,7 +601,8 @@ function autoPick() {
   applyFilters();
   updateActionButtons();
   updateRuleHighlights();
-  requestAnimationFrame(() => applyFilters());
+
+  showToast(`Auto-picked squad (${usedCredits}/150 credits)`);
 }
 
 function clearSquad() {
@@ -573,15 +653,27 @@ function disablePage(disabled) {
   app.style.opacity = disabled ? "0.6" : "1";
 }
 
-function showOverlay() {
-  document.getElementById("overlay").classList.add("show");
+function showOverlay(text = "Loading Data…") {
+  const overlay = document.getElementById("overlay");
+  const label = document.getElementById("overlayText");
+  if (!overlay) return;
+
+  if (label) label.textContent = text;
+  overlay.classList.add("show");
 }
 
 function hideOverlay() {
-  document.getElementById("overlay").classList.remove("show");
+  const overlay = document.getElementById("overlay");
+  if (!overlay) return;
+
+  overlay.classList.remove("show");
 }
 
 function openPreview() {
+   if (submissionLocked) {
+    showToast("⛔ Submissions are closed");
+    return;
+  }
   const list = document.getElementById("previewList");
 
   list.innerHTML = `
@@ -617,29 +709,31 @@ function closePreview() {
 }
 
 function confirmSubmit() {
-  closePreview();
-  submitSquad();
+  if (submissionLocked) {
+    showToast("⛔ Submissions are closed");
+    return; // ❌ don't close modal
+  }
+
+  submitSquad(true); // pass flag
 }
 
 function renderLastSubmittedSquad() {
-  const data = JSON.parse(localStorage.getItem("last_submission"));
-  if (!data) return;
+  const user = localStorage.getItem("fantasy_user");
+  if (!user) return;
+
+  const raw = localStorage.getItem(`last_submission_${user}`);
+  if (!raw) return;
+
+  const data = JSON.parse(raw);
 
   const meta = document.getElementById("lastSubmittedMeta");
+  const table = document.getElementById("lastSquadTable");
+
   if (data.submittedAt) {
     const dt = new Date(data.submittedAt);
-
-    const datePart = dt.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
-
     meta.textContent =
-      `Submitted on ${datePart} at ${dt.toLocaleTimeString()}`;
+      `Submitted on ${dt.toLocaleDateString("en-GB")} at ${dt.toLocaleTimeString()}`;
   }
-
-  const table = document.getElementById("lastSquadTable");
 
   table.innerHTML = `
     <tr>
@@ -669,6 +763,7 @@ function renderLastSubmittedSquad() {
     `;
   });
 }
+
 
 function updateActionButtons() {
   // Submit enabled only when exactly 15 players
@@ -734,10 +829,10 @@ async function checkSquadExistsFromBackend() {
   const btn = document.getElementById("startingXiBtn");
   if (!btn) return;
 
-  btn.style.display = "none"; // default
-
+  btn.style.display = "none";
   if (!user) return;
-
+  showOverlay("Loading Data...");
+  await new Promise(requestAnimationFrame);
   try {
     const res = await fetch(
       `${API_URL}?action=GET_SQUAD&user=${encodeURIComponent(user)}`
@@ -747,16 +842,75 @@ async function checkSquadExistsFromBackend() {
     if (data.status === "success" && data.squad?.length === 15) {
       btn.style.display = "inline-block";
 
-      // cache for UI only
-      localStorage.setItem("last_submission", JSON.stringify({
-        squad: data.squad,
-        captainId: data.captainId,
-        viceCaptainId: data.viceCaptainId,
-        totalCredits: data.totalCredits,
-        submittedAt: new Date().toISOString()
-      }));
+      localStorage.setItem(`last_submission_${user}`, JSON.stringify({
+      squad: data.squad,
+      captainId: data.captainId,
+      viceCaptainId: data.viceCaptainId,
+      totalCredits: data.totalCredits,
+      submittedAt: new Date().toISOString()
+    }));
+
+    renderLastSubmittedSquad(); // 🔥 sync UI immediately
+
     }
   } catch (err) {
     console.warn("Squad fetch failed", err);
+  } finally {
+    hideOverlay();  // ✅ ALWAYS stop loader
   }
+}
+
+function rehydrateUserState() {
+  const user = localStorage.getItem("fantasy_user");
+
+  // Reset in-memory state
+  squad = [];
+  usedCredits = 0;
+  captainId = null;
+  viceCaptainId = null;
+
+  renderSquad();
+  updateActionButtons();
+  updateRuleHighlights();
+
+  if (!user) return;
+
+  // Load last submitted squad for this user
+  const raw = localStorage.getItem(`last_submission_${user}`);
+  if (raw) {
+    renderLastSubmittedSquad();
+  } else {
+    // Clear last submission UI if none
+    document.getElementById("lastSubmittedMeta").textContent = "";
+    document.getElementById("lastSquadTable").innerHTML = "";
+  }
+
+  // Check backend + show Starting XI button if applicable
+  checkSquadExistsFromBackend();
+}
+
+function disableSquadPage(disabled) {
+  const app = document.getElementById("appRoot");
+  if (!app) return;
+
+  app.style.pointerEvents = disabled ? "none" : "auto";
+  app.style.opacity = disabled ? "0.6" : "1";
+}
+
+function getActiveUserOrBlock() {
+  const name = userNameInput.value.trim();
+
+  if (!name) {
+    showToast("Save your name first");
+    return null;
+  }
+
+  const saved = localStorage.getItem("fantasy_user");
+
+  // Sync input → storage (important)
+  if (!saved || saved !== name) {
+    localStorage.setItem("fantasy_user", name);
+  }
+
+  return name;
 }

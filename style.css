@@ -49,7 +49,7 @@ h1, h2, h3,
 
 h1 { font-size: 48px; text-align: center; }
 h2 { font-size: 40px; text-align: center; }
-h3 { font-size: 32px; text-align: center; color: var(--accent-orange);}
+h3 { font-size: 32px; margin-top: 4px; text-align:center; color: var(--accent-orange);}
 
 .highlight { color: var(--accent-orange); }
 .muted {
@@ -361,7 +361,7 @@ span.role {
 }
 
 tr:hover { 
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
  }
 .squad-table tr {
   transition: background 0.25s ease, transform 0.25s ease;
@@ -495,7 +495,7 @@ tr:hover {
 }
 
 .btn:hover {
-  transform: scale(1.05);
+  transform: scale(1.03);
   box-shadow: 0 10px 22px rgba(0,0,0,0.18);
 }
 
@@ -622,6 +622,8 @@ tr:hover {
   flex-direction: column;
   z-index: 6000;              /* above everything */
   opacity: 0;
+  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.35);
   pointer-events: none;
   transition: opacity 0.25s ease;
 }
@@ -720,7 +722,7 @@ input[type="radio"]::before {
   height: 8px;
   border-radius: 50%;
   transform: scale(0);
-  background: #6b6bff;
+  background: var(--accent-orange);
   transition: transform 0.2s ease;
 }
 
