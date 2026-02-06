@@ -391,6 +391,11 @@ tr:hover {
   height: 18px;
 }
 
+.edit-mode {
+  outline: 2px dashed var(--accent-orange);
+  animation: pulse 1.5s infinite;
+}
+
 /* =====================================================
    INSTRUCTIONS
 ===================================================== */

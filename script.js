@@ -1,8 +1,11 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbxuoSw52SiippXn11oTQpNTGOm-vYe6GwSDE2jA6rNDRIJwOgZpmUGMrZ0BjWyaV-jU/exec";
 // === SUBMISSION LOCK CONFIG ===
-const SUBMISSION_DEADLINE = new Date("2026-02-06T18:00:00"); // change later
+const SUBMISSION_DEADLINE = new Date("2026-02-06T22:00:00"); // change later
 let submissionLocked = false;
 let isSubmitting = false;
+
+let isSquadLocked = false;
+let lastSubmittedSquad = [];
 
 let squad = [];
 let usedCredits = 0;
@@ -27,7 +30,9 @@ const startingXiBtn = document.getElementById("startingXiBtn");
 
 /* Save username */
 function saveUser() {
-  const name = userNameInput.value.trim();
+  const raw = userNameInput.value.trim();
+  const name = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+
   if (!name) {
     showToast("Enter your name");
     return;
@@ -506,9 +511,25 @@ function addPlayerAuto(p, categoryCount, teamCount, limits) {
 }
 
 function clearSquad() {
-  if (confirm("Are you sure you want to clear your squad?")) {
-    resetCycle();
+  if (!confirm("Are you sure you want to clear your squad?")) return;
+
+  squad = [];
+  usedCredits = 0;
+  captainId = null;
+  viceCaptainId = null;
+
+  isSquadLocked = true;
+
+  const editBtn = document.getElementById("editBtn");
+  if (editBtn) {
+    editBtn.textContent = "✏️ Edit Squad";
+    editBtn.disabled = submissionLocked || !lastSubmittedSquad.length;
   }
+
+  renderSquad();
+  applyFilters();
+  updateActionButtons();
+  updateRuleHighlights();
 }
 
 function showToast(message) {
@@ -531,13 +552,19 @@ function checkSubmissionLock() {
   const countdownEl = document.getElementById("countdownText");
 
   if (diff <= 0) {
-    submissionLocked = true;
-    countdownEl.textContent = "⛔ Submissions Closed";
-    document.body.classList.add("locked");
-    submitBtn.disabled = true;
-    disablePage(true);
-    return;
-  }
+  submissionLocked = true;
+  countdownEl.textContent = "⛔ Submissions Closed";
+  document.body.classList.add("locked");
+
+  submitBtn.disabled = true;
+
+  // 🔥 DISABLE EDIT AFTER DEADLINE
+  const editBtn = document.getElementById("editBtn");
+  if (editBtn) editBtn.disabled = true;
+
+  disableAllPlayerCards(true);
+  return;
+}
 
   const days = Math.floor(diff / 86400000);
   const hrs = Math.floor((diff % 86400000) / 3600000);
@@ -613,8 +640,16 @@ function confirmSubmit() {
     showToast("⛔ Submissions are closed");
     return; // ❌ don't close modal
   }
-
   submitSquad(true); // pass flag
+
+  isSquadLocked = true;
+
+  // deep clone to avoid mutation bugs
+  lastSubmittedSquad = JSON.parse(JSON.stringify(squad));
+
+  renderLastSubmittedSquad(lastSubmittedSquad);
+
+  lockUIAfterSubmit();
 }
 
 function renderLastSubmittedSquad() {
@@ -664,7 +699,6 @@ function renderLastSubmittedSquad() {
   });
 }
 
-
 function updateActionButtons() {
   // Submit enabled only when exactly 15 players
 
@@ -679,6 +713,8 @@ function updateActionButtons() {
   if (clearBtn) {
     clearBtn.disabled = squad.length === 0;
   }
+  const editBtn = document.getElementById("editBtn");
+  if (editBtn) editBtn.disabled = submissionLocked || !lastSubmittedSquad.length;
 }
 
 function toggleInstructions() {
@@ -768,7 +804,7 @@ async function checkSquadExistsFromBackend() {
 function rehydrateUserState() {
   const user = localStorage.getItem("fantasy_user");
 
-  // Reset in-memory state
+  // Reset live state
   squad = [];
   usedCredits = 0;
   captainId = null;
@@ -780,17 +816,33 @@ function rehydrateUserState() {
 
   if (!user) return;
 
-  // Load last submitted squad for this user
   const raw = localStorage.getItem(`last_submission_${user}`);
+
   if (raw) {
+    const data = JSON.parse(raw);
+
+    // 🔥 THIS WAS MISSING
+    lastSubmittedSquad = JSON.parse(JSON.stringify(data.squad));
+    captainId = data.captainId;
+    viceCaptainId = data.viceCaptainId;
+    usedCredits = data.totalCredits;
+
+    // Enable Edit button
+    const editBtn = document.getElementById("editBtn");
+if (editBtn) {
+  editBtn.textContent = "✏️ Edit Squad";
+  editBtn.disabled = submissionLocked;
+}
+
     renderLastSubmittedSquad();
   } else {
-    // Clear last submission UI if none
-    document.getElementById("lastSubmittedMeta").textContent = "No Squad Submitted Yet.";
+    lastSubmittedSquad = [];
+    document.getElementById("editBtn").disabled = true;
+    document.getElementById("lastSubmittedMeta").textContent =
+      "No Squad Submitted Yet.";
     document.getElementById("lastSquadTable").innerHTML = "";
   }
 
-  // Check backend + show Starting XI button if applicable
   checkSquadExistsFromBackend();
 }
 
@@ -818,4 +870,84 @@ function getActiveUserOrBlock() {
   }
 
   return name;
+}
+
+function lockUIAfterSubmit() {
+  isSquadLocked = true;
+
+  submitBtn.disabled = true;
+  document.getElementById("clearBtn").disabled = true;
+
+  const editBtn = document.getElementById("editBtn");
+  if (editBtn) {
+    editBtn.textContent = "✏️ Edit Squad";
+    editBtn.disabled = submissionLocked;
+  }
+
+  startingXiBtn.style.display = "inline-flex";
+  disableAllPlayerCards(true);
+}
+
+function disableAllPlayerCards(state) {
+  document.querySelectorAll(".player-card button").forEach(btn => {
+    btn.disabled = state;
+  });
+}
+
+function toggleEditSquad() {
+  if (submissionLocked) {
+    showToast("⛔ Editing is closed after deadline");
+    return;
+  }
+
+  const editBtn = document.getElementById("editBtn");
+
+  /* =========================
+     ENTER EDIT MODE
+  ========================= */
+  if (!isSquadLocked) {
+    // Already editing → cancel
+    cancelEditSquad();
+    return;
+  }
+
+  if (!lastSubmittedSquad.length) {
+    showToast("⚠️ No submitted squad to edit");
+    return;
+  }
+
+  // 🔥 Enter edit mode
+  isSquadLocked = false;
+  editBtn.textContent = "❌ Cancel Edit";
+
+  // Restore squad from last submission
+  squad = JSON.parse(JSON.stringify(lastSubmittedSquad));
+  usedCredits = squad.reduce((s, p) => s + p.credits, 0);
+
+  showToast("✏️ Edit mode enabled");
+
+  disableAllPlayerCards(false);
+  updateActionButtons();
+  updateRuleHighlights();
+  renderSquad();
+  applyFilters();
+}
+
+function cancelEditSquad() {
+  const editBtn = document.getElementById("editBtn");
+
+  isSquadLocked = true;
+  editBtn.textContent = "✏️ Edit Squad";
+
+  // Restore original submitted squad
+  squad = JSON.parse(JSON.stringify(lastSubmittedSquad));
+  usedCredits = squad.reduce((s, p) => s + p.credits, 0);
+
+  showToast("↩️ Edit cancelled. Original squad restored");
+
+  disableAllPlayerCards(true);
+  updateActionButtons();
+  updateRuleHighlights();
+  renderSquad();
+  applyFilters();
 }

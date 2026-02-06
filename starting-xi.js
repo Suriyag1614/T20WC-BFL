@@ -24,6 +24,8 @@ let viceCaptainId = null;
 let draggedRowIndex = null;
 let userName = "";
 let isOverrideUser = false;
+let lastSubmittedXI = [];
+let isEditMode = false;
 
 /* =========================
    INIT
@@ -114,6 +116,14 @@ async function fetchLastSubmittedXI() {
       `${API_URL}?action=GET_LAST_XI&user=${encodeURIComponent(userName)}`
     );
     const data = await res.json();
+    lastSubmittedXI = data.startingXI.map(p => ({
+  id: String(p.id),
+  name: p.name,
+  category: p.category,
+  credits: Number(p.credits),
+  isCaptain: p.isCaptain,
+  isViceCaptain: p.isViceCaptain
+}));
 
     if (data.status !== "success" || !Array.isArray(data.startingXI) || data.startingXI.length === 0) {
       showToast("ℹ️ No previous Starting XI submission found");
@@ -154,6 +164,11 @@ async function fetchLastSubmittedXI() {
 
     document.getElementById("lastXIMeta").textContent =
       `Submitted on ${data.timestamp}`;
+    const editBtn = document.getElementById("editXI");
+if (editBtn) {
+  editBtn.disabled = xiSubmissionLocked;
+}
+
 
   } catch (err) {
     console.warn("No previous XI found");
@@ -386,8 +401,20 @@ if (credits > CREDIT_LIMIT) {
    CLEAR
 ========================= */
 function clearStartingXI() {
+  if (!confirm("Clear current Starting XI selection?")) return;
   selectedXI = [];
   autoIncludeCaptainVice();
+
+  isEditMode = false;
+
+  const editBtn = document.getElementById("editXI");
+  if (editBtn) {
+    editBtn.textContent = "✏️ Edit XI";
+    editBtn.disabled = xiSubmissionLocked || !lastSubmittedXI.length;
+  }
+
+  showToast("🧹 XI cleared. Submitted XI is safe.");
+  updateUI();
 }
 
 /* =========================
@@ -422,6 +449,14 @@ async function submitStartingXI() {
   if (data.status === "success") {
     showToast("✅ Starting XI submitted successfully!, You may close this page now.", 7000);
     fetchLastSubmittedXI();
+    isEditMode = false;
+
+const editBtn = document.getElementById("editXI");
+if (editBtn) {
+  editBtn.textContent = "✏️ Edit XI";
+  editBtn.disabled = xiSubmissionLocked;
+}
+    
   } else {
     showToast(data.message || "Submission failed");
   }
@@ -478,7 +513,7 @@ function hideLoader() {
    SUBMISSION TIMER (XI PAGE)
 ========================= */
 
-const SUBMISSION_DEADLINE = new Date("2026-02-06T18:00:00");
+const SUBMISSION_DEADLINE = new Date("2026-02-06T22:00:00");
 let xiSubmissionLocked = false;
 
 function startXITimer() {
@@ -494,6 +529,9 @@ function startXITimer() {
       countdownEl.textContent = "⛔ Submissions Closed";
       document.body.classList.add("locked");
       disableXIPage(true);
+      const editBtn = document.getElementById("editXI");
+if (editBtn) editBtn.disabled = true;
+
       return;
     }
 
@@ -515,3 +553,71 @@ function disableXIPage(disabled) {
 }
 
 document.addEventListener("DOMContentLoaded", startXITimer);
+
+function toggleEditXI() {
+  if (xiSubmissionLocked) {
+    showToast("⛔ Editing closed after deadline");
+    return;
+  }
+
+  const editBtn = document.getElementById("editXI");
+
+  // =========================
+  // ENTER EDIT MODE
+  // =========================
+  if (!isEditMode) {
+    if (!lastSubmittedXI.length) {
+      showToast("⚠️ No submitted XI to edit");
+      return;
+    }
+
+    isEditMode = true;
+    editBtn.textContent = "❌ Cancel Edit";
+
+    selectedXI = [];
+
+    // Restore C / VC
+    lastSubmittedXI.forEach(p => {
+      if (p.isCaptain) captainId = p.id;
+      if (p.isViceCaptain) viceCaptainId = p.id;
+    });
+
+    // Restore XI players
+    lastSubmittedXI.forEach(p => {
+      const player = submittedSquad.find(sp => sp.id === p.id);
+      if (player) selectedXI.push(player);
+    });
+
+    showToast("✏️ Edit mode enabled");
+    enableXIEditing();
+    updateUI();
+    return;
+  }
+
+  // =========================
+  // CANCEL EDIT MODE
+  // =========================
+  isEditMode = false;
+  editBtn.textContent = "✏️ Edit XI";
+
+  // Restore original submitted XI
+  selectedXI = [];
+  lastSubmittedXI.forEach(p => {
+    const player = submittedSquad.find(sp => sp.id === p.id);
+    if (player) selectedXI.push(player);
+  });
+
+  showToast("↩️ Edit cancelled. Original XI restored");
+  updateUI();
+}
+
+
+function enableXIEditing() {
+  const app = document.getElementById("appRoot");
+  if (!app) return;
+
+  app.style.pointerEvents = "auto";
+  app.style.opacity = "1";
+
+  document.getElementById("submitXI").disabled = false;
+}

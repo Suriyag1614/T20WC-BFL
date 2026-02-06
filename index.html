@@ -110,6 +110,15 @@
         Clear Squad
       </button>
       <button
+  type="button"
+  id="editBtn"
+  class="btn btn-warning"
+  onclick="toggleEditSquad()"
+  disabled>
+  ✏️ Edit Squad
+</button>
+
+      <button
         type="button"
         id="startingXiBtn"
         class="btn btn-success"
@@ -156,8 +165,6 @@
   <!-- THEN SQUAD LIST -->
   <table id="squadList" class="squad-table"></table>
 </div>
-
-
       <!-- LAST SUBMITTED -->
       <div class="squad readonly">
         <h3>Last Submitted Squad</h3>

@@ -657,11 +657,11 @@ const players = [
   },
   {
     "id": "P083",
-    "name": "Josh Hazlewood",
+    "name": "Sean Abbott",
     "category": "Bowler",
     "team": "AUS",
     "group": "B",
-    "credits": 8.5
+    "credits": 7
   },
   {
     "id": "P084",
