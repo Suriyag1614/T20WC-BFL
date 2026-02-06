@@ -513,7 +513,7 @@ function hideLoader() {
    SUBMISSION TIMER (XI PAGE)
 ========================= */
 
-const SUBMISSION_DEADLINE = new Date("2026-02-06T23:59:59");
+const SUBMISSION_DEADLINE = new Date("2026-02-07T11:00:00");
 let xiSubmissionLocked = false;
 
 function startXITimer() {
