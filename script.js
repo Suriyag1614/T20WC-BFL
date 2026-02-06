@@ -14,6 +14,9 @@ const MAX_CREDITS = 150;
 
 let captainId = null;
 let viceCaptainId = null;
+let lastSubmittedCaptainId = null;
+let lastSubmittedViceCaptainId = null;
+
 const validationPanel = document.getElementById("validationPanel");
 const playerList = document.getElementById("playerList");
 const squadList = document.getElementById("squadList");
@@ -824,15 +827,20 @@ function rehydrateUserState() {
     // 🔥 THIS WAS MISSING
     lastSubmittedSquad = JSON.parse(JSON.stringify(data.squad));
     captainId = data.captainId;
+    
+    lastSubmittedCaptainId = data.captainId;
+    lastSubmittedViceCaptainId = data.viceCaptainId;
+
     viceCaptainId = data.viceCaptainId;
     usedCredits = data.totalCredits;
-
+    usedCredits=data.totalCredits;
+    
     // Enable Edit button
     const editBtn = document.getElementById("editBtn");
-if (editBtn) {
-  editBtn.textContent = "✏️ Edit Squad";
-  editBtn.disabled = submissionLocked;
-}
+    if (editBtn) {
+      editBtn.textContent = "✏️ Edit Squad";
+      editBtn.disabled = submissionLocked;
+    }
 
     renderLastSubmittedSquad();
   } else {
@@ -920,8 +928,10 @@ function toggleEditSquad() {
   isSquadLocked = false;
   editBtn.textContent = "❌ Cancel Edit";
 
-  // Restore squad from last submission
+  // Restore squad + C / VC from last submission
   squad = JSON.parse(JSON.stringify(lastSubmittedSquad));
+  captainId = lastSubmittedCaptainId;
+  viceCaptainId = lastSubmittedViceCaptainId;
   usedCredits = squad.reduce((s, p) => s + p.credits, 0);
 
   showToast("✏️ Edit mode enabled");
@@ -940,7 +950,10 @@ function cancelEditSquad() {
   editBtn.textContent = "✏️ Edit Squad";
 
   // Restore original submitted squad
+  // Restore original submitted squad
   squad = JSON.parse(JSON.stringify(lastSubmittedSquad));
+  captainId = lastSubmittedCaptainId;
+  viceCaptainId = lastSubmittedViceCaptainId;
   usedCredits = squad.reduce((s, p) => s + p.credits, 0);
 
   showToast("↩️ Edit cancelled. Original squad restored");
