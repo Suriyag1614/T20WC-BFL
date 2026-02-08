@@ -1,6 +1,6 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbxuoSw52SiippXn11oTQpNTGOm-vYe6GwSDE2jA6rNDRIJwOgZpmUGMrZ0BjWyaV-jU/exec";
 // === SUBMISSION LOCK CONFIG ===
-const SUBMISSION_DEADLINE = new Date("2026-02-06T10:00:00"); // change later
+const SUBMISSION_DEADLINE = new Date("2026-02-06T22:00:00"); // change later
 let submissionLocked = false;
 let isSubmitting = false;
 
